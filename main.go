@@ -4,11 +4,11 @@ import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	_ "github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/shadowsocks"
 	_ "github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/vmess"
+	"github.com/mzz2017/gg/tracer"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/proxy"
 	"os"
 	"os/exec"
-	"ptrace/tracer"
 )
 
 func main() {

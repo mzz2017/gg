@@ -2,11 +2,11 @@ package tracer
 
 import (
 	"fmt"
+	"github.com/mzz2017/gg/proxy"
+	"github.com/mzz2017/gg/ptrace"
 	"github.com/sirupsen/logrus"
 	proxy2 "golang.org/x/net/proxy"
 	"os"
-	"ptrace/proxy"
-	"ptrace/ptrace"
 	"runtime"
 	"syscall"
 	"time"

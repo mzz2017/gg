@@ -3,11 +3,11 @@ package tracer
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/mzz2017/gg/proxy"
+	"github.com/mzz2017/gg/ptrace"
 	"github.com/sirupsen/logrus"
 	"inet.af/netaddr"
 	"net"
-	"ptrace/proxy"
-	"ptrace/ptrace"
 	"reflect"
 	"strconv"
 	"syscall"
