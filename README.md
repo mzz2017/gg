@@ -1,5 +1,5 @@
 # gg
-gg, go-graft, inspired by [graftcp](https://github.com/hmgle/graftcp). go-graft is a pure golang implementation with more useful features.
+gg (go-graft), was inspired by [graftcp](https://github.com/hmgle/graftcp). go-graft is a pure golang implementation with more useful features.
 
 TODO:
 1. Use system DNS as the fallback.
