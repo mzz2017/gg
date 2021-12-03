@@ -76,7 +76,7 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			}
 		}
 	case syscall.SYS_CONNECT, syscall.SYS_SENDTO:
-		t.log.Tracef("syscall.SYS_CONNECT | syscall.SYS_SENDTO")
+		t.log.Tracef("syscall.SYS_CONNECT || syscall.SYS_SENDTO")
 		args := ptrace.Arguments(regs)
 		fd := args[0]
 		socketInfo, ok := t.checkSocket(pid, fd)
@@ -108,7 +108,7 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		if _, err = syscall.PtracePeekData(pid, uintptr(pSockAddr), bSockAddr); err != nil {
 			return fmt.Errorf("PtracePeekData: %w", err)
 		}
-		t.log.Tracef("%v %v", bSockAddr, sockAddrLen)
+		//t.log.Tracef("%v %v", bSockAddr, sockAddrLen)
 		sockAddr := *(*syscall.RawSockaddr)(unsafe.Pointer(&bSockAddr[0]))
 
 		switch sockAddr.Family {
@@ -141,7 +141,7 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		fd := args[0]
 		socketInfo, ok := t.checkSocket(pid, fd)
 		if !ok {
-			//return nil
+			return nil
 		}
 		if t.ignoreUDP && t.network(socketInfo) == "udp" {
 			return nil
