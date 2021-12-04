@@ -98,7 +98,7 @@ func GetDialer(log *logrus.Logger,cmd *cobra.Command) (*dialer.Dialer, error) {
 		return nil, err
 	}
 	if len(link) > 0 {
-		log.Warn("Please use --link only on trusted computers, because it may leave a record in the command history.")
+		log.Warn("Please use --link only on trusted computers, because it may leave a record in command history.")
 	} else {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter the share-link of your proxy: ")

@@ -4,7 +4,6 @@
 package ptrace
 
 import (
-	"C"
 	"syscall"
 )
 

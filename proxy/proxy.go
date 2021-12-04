@@ -87,7 +87,7 @@ func (p *Proxy) ListenTCP(addr string) (err error) {
 	for {
 		conn, err := lt.Accept()
 		if err != nil {
-			p.log.Warnf("%v", err)
+			p.log.Infof("%v", err)
 		}
 		go func() {
 			err := p.handleTCP(conn)
@@ -120,7 +120,7 @@ func (p *Proxy) ListenUDP(addr string) (err error) {
 			if errors.Is(err, net.ErrClosed) {
 				return nil
 			}
-			p.log.Warnf("ReadFrom: %v", err)
+			p.log.Infof("ReadFrom: %v", err)
 			continue
 		}
 		data := pool.Get(n)
@@ -128,7 +128,7 @@ func (p *Proxy) ListenUDP(addr string) (err error) {
 		go func() {
 			err := p.handleUDP(lAddr, data)
 			if err != nil {
-				p.log.Warnf("handleUDP: %v", err)
+				p.log.Infof("handleUDP: %v", err)
 			}
 			pool.Put(data)
 		}()
