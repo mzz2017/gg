@@ -18,9 +18,10 @@ var (
 	Version = "unknown"
 	verbose int
 	rootCmd = &cobra.Command{
-		Use:     "gg [flags] [-- command [arument ...]]",
+		Use:     "gg [flags] [command [argument ...]]",
 		Short:   "go-graft redirects the traffic of given program to your proxy.",
-		Long:    `go-graft redirects the traffic of given program to your proxy.`,
+		Long:    `go-graft is a portable tool to redirect the traffic of a given 
+program to your modern proxy without installing any other programs.`,
 		Version: Version,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
