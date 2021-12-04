@@ -5,7 +5,7 @@ gg was inspired by [graftcp](https://github.com/hmgle/graftcp), and is a pure go
 
 **Why I created go-graft?**
 
-I am so tired of the poor network condition in my research and development. So I need a light and portable tool to help me download and install dependencies on various servers.
+I am so tired of the poor network condition in my research and development. So I need a light and portable command-line tool to help me download and install dependencies and software on various servers.
 
 **Advantages**
 
@@ -13,7 +13,7 @@ Compared to proxychains or graftcp, we have the following advantages:
 
 1. Use it independently without any other proxy utils.
 2. UDP support.
-3. Support golang programs.
+3. Support golang programs. See [applications built by Go can not be hook by proxychains-ng](https://github.com/rofl0r/proxychains-ng/issues/199).
 
 ## [WIP] Installation
 
@@ -39,31 +39,68 @@ Compared to proxychains or graftcp, we have the following advantages:
 
 ## Usage
 
-**Use share-link:**
+### Temporarily use
+
+**Use share-link**
 
 ```bash
-$ gg --link vmess://your_share_link_of_a_node curl ipv4.appspot.com
-13.141.150.163
+$ gg git clone https://github.com/mzz2017/gg.git
+Enter the share-link of your proxy: ********
+Cloning into 'gg'...
+...
+Receiving objects: 100% (100/100), 72.10 KiB | 403.00 KiB/s, done.
+Resolving deltas: 100% (36/36), done.
 ```
 
-**[WIP] Use subscription:**
+Or use `--link`: 
 
+```bash
+$ gg --link ss://your_share_link_of_a_node git clone https://github.com/mzz2017/gg.git
+Cloning into 'gg'...
+...
+Receiving objects: 100% (100/100), 72.10 KiB | 403.00 KiB/s, done.
+Resolving deltas: 100% (36/36), done.
+```
+
+**[WIP] Use subscription**
+
+Use the first available node:
 ```bash
 $ gg --subscription https://your_subscription_link curl ipv4.appspot.com
 13.141.150.163
 ```
 
-**[WIP] Persistent config variables**
-
-Write a config variable with `-w`:
+Select node manually:
 ```bash
-$ gg config -w link=ss://your_share_link_of_a_node
-$ gg curl ipv4.appspot.com
+$ gg --subscription https://your_subscription_link --select curl ipv4.appspot.com
+Select to connect:
+[ ] 253ms - Azure US West
+[x] 51ms - Azure HK
+[ ] 70ms - xTom IIJ JP  
 13.141.150.163
 ```
 
-Read a config variable:
+Automatically select the fastest node:
+```bash
+$ gg --subscription https://your_subscription_link --fast curl ipv4.appspot.com
+13.141.150.163
+```
 
+### [WIP] Long-term use
+
+Write a config variable with `-w`:
+```bash
+$ gg config -w subscription=https://your_subscription_link
+$ gg curl ipv4.appspot.com
+13.141.150.163
+```
+```bash
+$ gg config -w link=vmess://your_share_link_of_a_node
+$ gg curl ipv4.appspot.com
+53.141.112.10
+```
+
+Read a config variable:
 ```bash
 $ gg config link
 ss://your_share_link_of_a_node
@@ -73,23 +110,30 @@ List config variables:
 ```bash
 $ gg config
 subscription=https://your_subscription_link
+subscription.select=fast
 cache.subscription.lastlink=trojan://the_link_of_a_node
 ```
 
 ## Support List
 
+### OS/Arch
+
+- [x] Linux/amd64
+- [ ] Linux/386
+- [ ] Linux/arm64
+- [ ] Linux/arm
+
 ### Protocol
 
-- [ ] vmess(v2rayN)
+- [ ] VMess
   - [x] vmess + tcp (AEAD)
-- [x] SS(SIP002)
+- [x] Shadowsocks
   - [x] AEAD Ciphers
   - [ ] Stream Ciphers
-- [ ] trojan
-- [ ] trojan-go
-- [ ] http
-- [ ] https
-- [ ] socks5
+- [ ] Trojan
+- [ ] Trojan-go
+- [ ] HTTP(S)
+- [ ] Socks5
 
 ### [WIP] Subscription
 
