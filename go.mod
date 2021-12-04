@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v1.1.6
 	github.com/sirupsen/logrus v1.8.1
+	github.com/spf13/cobra v1.2.1
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
 )
@@ -21,6 +22,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/feeds v1.1.1 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
@@ -30,6 +32,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c // indirect
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/v2rayA/beego/v2 v2.0.4 // indirect
 	github.com/yl2chen/cidranger v1.0.2 // indirect
@@ -37,8 +40,10 @@ require (
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20211027215541-db492cf91b37 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 //replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => ../BitterJohn
+replace github.com/spf13/pflag => github.com/mzz2017/pflag v0.0.0-20211204030847-74e9419ee6b3
