@@ -189,3 +189,49 @@ func (p *Proxy) relay(laddr net.Addr, rConn net.PacketConn, timeout time.Duratio
 		}
 	}
 }
+
+//func NewUDPDialer(laddr netaddr.IPPort, timeout time.Duration, log *logrus.Logger) (dialer *net.Dialer) {
+//	return &net.Dialer{
+//		Timeout: timeout,
+//		Control: func(network, address string, c syscall.RawConn) error {
+//			return c.Control(func(fd uintptr) {
+//				ip := laddr.IP().As4()
+//				if err := BindAddr(fd, ip[:], int(laddr.Port())); err != nil {
+//					if log != nil {
+//						log.Warnf("Strict DNS lookup may fail: %v", err)
+//					}
+//				}
+//			})
+//		},
+//	}
+//}
+//
+//func BindAddr(fd uintptr, ip []byte, port int) error {
+//	if err := syscall.SetsockoptInt(int(fd), syscall.SOL_IP, syscall.IP_TRANSPARENT, 1); err != nil {
+//		return fmt.Errorf("set IP_TRANSPARENT: %w", err)
+//	}
+//	if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1); err != nil {
+//		return fmt.Errorf("set SO_REUSEADDR: %w", err)
+//	}
+//
+//	var sockaddr syscall.Sockaddr
+//
+//	switch len(ip) {
+//	case net.IPv4len:
+//		a4 := &syscall.SockaddrInet4{
+//			Port: port,
+//		}
+//		copy(a4.Addr[:], ip)
+//		sockaddr = a4
+//	case net.IPv6len:
+//		a6 := &syscall.SockaddrInet6{
+//			Port: port,
+//		}
+//		copy(a6.Addr[:], ip)
+//		sockaddr = a6
+//	default:
+//		return fmt.Errorf("unexpected length of ip")
+//	}
+//
+//	return syscall.Bind(int(fd), sockaddr)
+//}

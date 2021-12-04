@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/mzz2017/gg/proxy"
-	"github.com/mzz2017/gg/ptrace"
 	"github.com/sirupsen/logrus"
 	"inet.af/netaddr"
 	"net"
@@ -17,12 +16,12 @@ import (
 func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 	switch regs.Orig_rax {
 	case syscall.SYS_SOCKET:
-		fd, errno := ptrace.ReturnValueInt(regs)
+		fd, errno := ReturnValueInt(regs)
 		if errno != 0 {
 			logrus.Tracef("socket error: pid: %v, errno: %v", pid, errno)
 			return nil
 		}
-		args := ptrace.Arguments(regs)
+		args := Arguments(regs)
 		socketInfo := SocketMetadata{
 			Family: int(args[0]),
 			Type:   int(args[1]),
@@ -31,7 +30,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		t.log.Tracef("socket (%v): pid: %v, fd %v", t.network(&socketInfo), pid, fd)
 	case syscall.SYS_FCNTL:
 		// syscall.SYS_FCNTL can be used to duplicate the file descriptor.
-		args := ptrace.Arguments(regs)
+		args := Arguments(regs)
 		switch args[1] {
 		case syscall.F_DUPFD, syscall.F_DUPFD_CLOEXEC:
 		default:
@@ -43,7 +42,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			logrus.Tracef("syscall.F_DUPFD: socketInfo cannot found: pid: %v, fd: %v", pid, fd)
 			return nil
 		}
-		newFD, errno := ptrace.ReturnValueInt(regs)
+		newFD, errno := ReturnValueInt(regs)
 		if errno != 0 {
 			logrus.Tracef("socket error: pid: %v, errno: %v", pid, errno)
 			return nil
@@ -52,7 +51,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		t.log.Tracef("SYS_FCNTL: copy %v -> %v", fd, newFD)
 	case syscall.SYS_CLOSE:
 		// we do not need to know if it succeeded
-		fd := ptrace.Argument(regs, 0)
+		fd := Argument(regs, 0)
 		t.removeSocketInfo(pid, int(fd))
 	}
 	return nil
@@ -62,7 +61,7 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 	//logrus.Println(regs.Orig_rax)
 	switch regs.Orig_rax {
 	case syscall.SYS_SOCKET:
-		args := ptrace.Arguments(regs)
+		args := Arguments(regs)
 		family := int(args[0])
 		typ := int(args[1])
 		// Convert all INET6 calls to INET4 calls because there is only one IPv6 loopback address but many IPv4 loopback addresses.
@@ -70,14 +69,14 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		if family == syscall.AF_INET6 && (typ&syscall.SOCK_STREAM == syscall.SOCK_STREAM ||
 			typ&syscall.SOCK_DGRAM == syscall.SOCK_DGRAM) {
 			newRegs := *regs
-			ptrace.SetArgument(&newRegs, 0, uint64(syscall.AF_INET))
+			SetArgument(&newRegs, 0, uint64(syscall.AF_INET))
 			if err = syscall.PtraceSetRegs(pid, &newRegs); err != nil {
 				return fmt.Errorf("set family for socket: %w", err)
 			}
 		}
 	case syscall.SYS_CONNECT, syscall.SYS_SENDTO:
 		t.log.Tracef("syscall.SYS_CONNECT || syscall.SYS_SENDTO")
-		args := ptrace.Arguments(regs)
+		args := Arguments(regs)
 		fd := args[0]
 		socketInfo, ok := t.checkSocket(pid, fd)
 		if !ok {
@@ -137,7 +136,7 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		}
 	case syscall.SYS_SENDMSG:
 		t.log.Tracef("syscall.SYS_SENDMSG")
-		args := ptrace.Arguments(regs)
+		args := Arguments(regs)
 		fd := args[0]
 		socketInfo, ok := t.checkSocket(pid, fd)
 		if !ok {
@@ -147,12 +146,12 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			return nil
 		}
 		pMsg := args[1]
-		bMsg := make([]byte, binary.Size(ptrace.RawMsgHdr{}))
+		bMsg := make([]byte, binary.Size(RawMsgHdr{}))
 		_, err = syscall.PtracePeekData(pid, uintptr(pMsg), bMsg)
 		if err != nil {
 			return fmt.Errorf("PtracePeekData: %w", err)
 		}
-		msg := *(*ptrace.RawMsgHdr)(unsafe.Pointer(&bMsg[0]))
+		msg := *(*RawMsgHdr)(unsafe.Pointer(&bMsg[0]))
 		if msg.LenMsgName == 0 {
 			// no target
 			return nil
@@ -207,12 +206,12 @@ func pokeAddrToArgument(pid int, regs *syscall.PtraceRegs, bAddrToPoke []byte, p
 	if _, err = syscall.PtracePokeData(pid, pSockAddr, bAddrToPoke); err != nil {
 		return fmt.Errorf("pokeAddrToArgument: %w", err)
 	}
-	if ptrace.Argument(regs, orderSockAddrLen) == uint64(len(bAddrToPoke)) {
+	if Argument(regs, orderSockAddrLen) == uint64(len(bAddrToPoke)) {
 		// they are the same, so there is no need to set the len
 		return nil
 	}
 	newRegs := *regs
-	ptrace.SetArgument(&newRegs, orderSockAddrLen, uint64(len(bAddrToPoke)))
+	SetArgument(&newRegs, orderSockAddrLen, uint64(len(bAddrToPoke)))
 	if err = syscall.PtraceSetRegs(pid, &newRegs); err != nil {
 		return fmt.Errorf("set addr len for connect: %w", err)
 	}
@@ -265,7 +264,7 @@ func (t *Tracer) network(socketInfo *SocketMetadata) string {
 func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sockAddrToPock []byte, err error) {
 	network := t.network(socketInfo)
 	port := t.port(socketInfo)
-	addr := *(*ptrace.RawSockaddrInet4)(unsafe.Pointer(&bSockAddr[0]))
+	addr := *(*RawSockaddrInet4)(unsafe.Pointer(&bSockAddr[0]))
 	if addr.Addr[0] == 127 {
 		// skip loopback
 		t.log.Tracef("skip loopback: %v:%v", addr.Addr, binary.BigEndian.Uint16(addr.Port[:]))
@@ -307,7 +306,7 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	network := t.network(socketInfo)
 	port := t.port(socketInfo)
 
-	addr := *(*ptrace.RawSockaddrInet6)(unsafe.Pointer(&bSockAddr[0]))
+	addr := *(*RawSockaddrInet6)(unsafe.Pointer(&bSockAddr[0]))
 	logrus.Traceln(addr)
 	// the new size of sock_addr is smaller, so it is safe
 	originAddr := net.JoinHostPort(
@@ -315,7 +314,7 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
 	)
 	loopback := t.proxy.AllocProjection(originAddr)
-	addrToPoke := ptrace.RawSockaddrInet4{
+	addrToPoke := RawSockaddrInet4{
 		Family: syscall.AF_INET,
 		Port:   [2]byte{},
 		Addr:   loopback.As4(),

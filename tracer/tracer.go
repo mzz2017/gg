@@ -3,7 +3,6 @@ package tracer
 import (
 	"fmt"
 	"github.com/mzz2017/gg/proxy"
-	"github.com/mzz2017/gg/ptrace"
 	"github.com/sirupsen/logrus"
 	proxy2 "golang.org/x/net/proxy"
 	"os"
@@ -132,7 +131,7 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 				var regs syscall.PtraceRegs
 				err = syscall.PtraceGetRegs(child, &regs)
 				if err == nil {
-					entryStop := ptrace.IsEntryStop(&regs)
+					entryStop := IsEntryStop(&regs)
 					if entryStop {
 						if err := t.entryHandler(child, &regs); err != nil {
 							logrus.Tracef("entryHandler: %v", err)
