@@ -61,6 +61,7 @@ func NewV2Ray(link string) (*Dialer, error) {
 		return &Dialer{
 			Dialer:     dialer,
 			supportUDP: true,
+			name:       s.Ps,
 		}, nil
 	} else if strings.HasPrefix(link, "vless://") {
 		//s, err = ParseVlessURL(link)

@@ -52,10 +52,10 @@ Receiving objects: 100% (100/100), 72.10 KiB | 403.00 KiB/s, done.
 Resolving deltas: 100% (36/36), done.
 ```
 
-Or use `--link`: 
+Or use `--node`: 
 
 ```bash
-$ gg --link ss://your_share_link_of_a_node git clone https://github.com/mzz2017/gg.git
+$ gg --node ss://your_share_link_of_a_node git clone https://github.com/mzz2017/gg.git
 Cloning into 'gg'...
 ...
 Receiving objects: 100% (100/100), 72.10 KiB | 403.00 KiB/s, done.
@@ -76,13 +76,13 @@ $ gg --subscription https://your_subscription_link --select curl ipv4.appspot.co
 Select to connect:
 [ ] 253ms - Azure US West
 [x] 51ms - Azure HK
-[ ] 70ms - xTom IIJ JP  
+[ ] 70ms - xTom IIJ JP
 13.141.150.163
 ```
 
 Automatically select the fastest node:
 ```bash
-$ gg --subscription https://your_subscription_link --fast curl ipv4.appspot.com
+$ gg --subscription https://your_subscription_link --fastest curl ipv4.appspot.com
 13.141.150.163
 ```
 
@@ -95,14 +95,14 @@ $ gg curl ipv4.appspot.com
 13.141.150.163
 ```
 ```bash
-$ gg config -w link=vmess://your_share_link_of_a_node
+$ gg config -w node=vmess://your_share_link_of_a_node
 $ gg curl ipv4.appspot.com
 53.141.112.10
 ```
 
 Read a config variable:
 ```bash
-$ gg config link
+$ gg config node
 ss://your_share_link_of_a_node
 ```
 
@@ -111,7 +111,7 @@ List config variables:
 $ gg config
 subscription=https://your_subscription_link
 subscription.select=fast
-cache.subscription.lastlink=trojan://the_link_of_a_node
+cache.subscription.lastnode=trojan://the_link_of_a_node
 ```
 
 ## Support List
