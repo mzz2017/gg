@@ -8,7 +8,7 @@ programs.
 gg was inspired by [graftcp](https://github.com/hmgle/graftcp), and is a pure golang implementation with more useful
 features.
 
-**Why I created go-graft?**
+**Why did I create go-graft?**
 
 I am so tired of the poor network condition in my research and development. But I do not want to install v2ray in my
 working server because it is too heavy.
@@ -31,7 +31,7 @@ Compared to proxychains or graftcp, we have the following advantages:
 1. Run this command to download the latest release of go-graft:
 
     ```bash
-    sudo curl -L "https://github.com/mzz2017/gg/releases/download/0.1.0/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
+    sudo curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
     sudo chmod +x /usr/local/bin/gg
     ```
 
@@ -47,7 +47,7 @@ Compared to proxychains or graftcp, we have the following advantages:
 2. Test the installation.
    ```bash
    $ gg --version
-   gg version 0.1.0
+   gg version 0.1.1
    ```
 
 ## Usage
@@ -180,8 +180,8 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 - [x] Shadowsocks
     - [x] AEAD Ciphers
     - [ ] Stream Ciphers
-- [ ] Trojan
-- [ ] Trojan-go
+- [ ] ShadowsocksR
+- [ ] Trojan(-go)
 - [ ] HTTP(S)
 - [ ] Socks5
 
