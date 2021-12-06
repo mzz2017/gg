@@ -126,8 +126,8 @@ func initConfig(flagCmd *cobra.Command, log *logrus.Logger) (path string) {
 	}
 
 	if flagCmd != nil {
-		v.BindPFlag("noudp", flagCmd.PersistentFlags().Lookup("noudp"))
-		v.BindPFlag("testnode", flagCmd.PersistentFlags().Lookup("testnode"))
+		v.BindPFlag("no_udp", flagCmd.PersistentFlags().Lookup("noudp"))
+		v.BindPFlag("test_node_before_use", flagCmd.PersistentFlags().Lookup("testnode"))
 		if node, _ := flagCmd.PersistentFlags().GetString("node"); node != "" {
 			//log.Warn("Please use --node only on trusted computers, because it may leave a record in command history.")
 			v.BindPFlag("node", flagCmd.PersistentFlags().Lookup("node"))
@@ -135,7 +135,7 @@ func initConfig(flagCmd *cobra.Command, log *logrus.Logger) (path string) {
 		v.BindPFlag("subscription.link", flagCmd.PersistentFlags().Lookup("subscription"))
 		if ok, _ := flagCmd.PersistentFlags().GetBool("select"); ok {
 			v.Set("subscription.select", "manual")
-			v.Set("subscription.cachelastnode", "false")
+			v.Set("subscription.cache_last_node", "false")
 		}
 	}
 	if err := config.NewBinder(v).Bind(config.ParamsObj); err != nil {
@@ -145,7 +145,8 @@ func initConfig(flagCmd *cobra.Command, log *logrus.Logger) (path string) {
 		log.Fatalf("Fatal error loading config: %s", err)
 	}
 
-	log.Tracef("config:\n%v\n", strings.Join(common.MapToKV(v.AllSettings()), "\n"))
+	log.Tracef("Config file path: %v\n", v.ConfigFileUsed())
+	log.Tracef("Config:\n%v\n", strings.Join(common.MapToKV(v.AllSettings()), "\n"))
 
 	if v.ConfigFileUsed() == "" {
 		if home == "" {

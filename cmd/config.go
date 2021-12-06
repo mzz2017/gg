@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/fatih/structs"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/config"
 	"github.com/sirupsen/logrus"
@@ -21,15 +20,11 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			// read
 			configPath := initConfig(nil, logrus.New())
-			// write
 			write, _ := cmd.PersistentFlags().GetString("write")
 			if len(write) == 0 {
-				kv := common.MapToKV(structs.Map(config.ParamsObj))
-				for i := range kv {
-					kv[i] = strings.ToLower(kv[i])
-				}
+				kv := common.ObjectToKV(config.ParamsObj, "toml")
 				if len(args) != 0 {
-					keySetToFind := common.StringsToSet(args)
+					keySetToFind := common.StringsMapToSet(args, completeKey)
 					// show config variable
 					for i := range kv {
 						fields := strings.SplitN(kv[i], "=", 2)
@@ -49,9 +44,9 @@ var (
 			if len(fields) == 1 {
 				logrus.Fatalln(`Unexpected format.
 For example:
-gg config -w noudp=true`)
+gg config -w no_udp=true`)
 			}
-			if err := config.SetValueHierarchicalMap(m, fields[0], fields[1]); err != nil {
+			if err := config.SetValueHierarchicalMap(m, completeKey(fields[0]), fields[1]); err != nil {
 				logrus.Fatalln(err)
 			}
 
@@ -75,4 +70,12 @@ func init() {
 
 func WriteConfig() {
 	// TODO: cache last node
+}
+
+func completeKey(key string) string {
+	switch key {
+	case "subscription":
+		return "subscription.link"
+	}
+	return key
 }

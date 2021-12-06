@@ -1,11 +1,15 @@
 # gg (go-graft)
-gg is a portable tool to redirect the traffic of a given program to your modern proxy without installing any other programs.
+gg is a command-line tool for one-click proxy in your research and development.
+
+You can just add `gg` before another command to redirect its traffic to your proxy without installing any other programs.
 
 gg was inspired by [graftcp](https://github.com/hmgle/graftcp), and is a pure golang implementation with more useful features.
 
 **Why I created go-graft?**
 
-I am so tired of the poor network condition in my research and development. So I need a light and portable command-line tool to help me download and install dependencies and software on various servers.
+I am so tired of the poor network condition in my research and development. But I do not want to install v2ray in my working server because it is too heavy.
+
+Thus I need a light and portable command-line tool to help me download and install dependencies and software on various servers. And then, gg was born.
 
 **Advantages**
 
@@ -38,41 +42,71 @@ Compared to proxychains or graftcp, we have the following advantages:
    ```
 
 ## Usage
+**Example:**
+
+```bash
+# use subscription:
+$ gg config -w subscription=https://example.com/path/to/sub
+
+# or use node:
+# gg config -w node=ss://YWVzLTEyOC1nY206MQ@example.com:17247
+
+# test with cloning linux repo:
+$ gg git clone --depth=1 https://github.com/torvalds/linux.git
+Enter the share-link of your proxy: ss://YWVzLTEyOC1nY206MQ@example.com:17247
+Cloning into 'linux'...
+...
+Receiving objects: 100% (78822/78822), 212.19 MiB | 7.04 MiB/s, done.
+Resolving deltas: 100% (7155/7155), done.
+```
 
 ### Temporarily use
 
 **Use share-link**
 
 ```bash
-$ gg git clone https://github.com/mzz2017/gg.git
-Enter the share-link of your proxy: ********
-Cloning into 'gg'...
+$ gg git clone --depth=1 https://github.com/torvalds/linux.git
+Enter the share-link of your proxy: ss://YWVzLTEyOC1nY206MQ@example.com:17247
+Cloning into 'linux'...
 ...
-Receiving objects: 100% (100/100), 72.10 KiB | 403.00 KiB/s, done.
-Resolving deltas: 100% (36/36), done.
+Receiving objects: 100% (78822/78822), 212.19 MiB | 7.04 MiB/s, done.
+Resolving deltas: 100% (7155/7155), done.
 ```
 
 Or use `--node`: 
 
 ```bash
-$ gg --node ss://your_share_link_of_a_node git clone https://github.com/mzz2017/gg.git
-Cloning into 'gg'...
+$ gg --node ss://YWVzLTEyOC1nY206MQ@example.com:17247 speedtest
+Retrieving speedtest.net configuration...
+Testing from Microsoft (13.xx.xx.xx)...
 ...
-Receiving objects: 100% (100/100), 72.10 KiB | 403.00 KiB/s, done.
-Resolving deltas: 100% (36/36), done.
+Hosted by xxx: 55.518 ms
+Testing download speed................................................................................
+Download: 104.83 Mbit/s
+Testing upload speed......................................................................................................
+Upload: 96.35 Mbit/s
 ```
 
 **[WIP] Use subscription**
 
-Use the first available node:
+Automatically select the first available node from the subscription:
 ```bash
-$ gg --subscription https://your_subscription_link curl ipv4.appspot.com
-13.141.150.163
+$ gg --subscription https://example.com/path/to/sub docker pull caddy
+Using default tag: latest
+latest: Pulling from library/caddy
+97518928ae5f: Pull complete
+23ccae726125: Pull complete
+3de6a61c89ac: Pull complete
+39ed957bdc00: Pull complete
+0ae44c2d42dd: Pull complete
+Digest: sha256:46f11f4601ecb4c5a37d6014ad51f5cbfeb92b70f5c9ec6c2ac39c4c1a325588
+Status: Downloaded newer image for caddy:latest
+docker.io/library/caddy:latest
 ```
 
-Select node manually:
+Select the node manually:
 ```bash
-$ gg --subscription https://your_subscription_link --select curl ipv4.appspot.com
+$ gg --subscription https://example.com/path/to/sub --select curl ipv4.appspot.com
 Select to connect:
 [ ] 253ms - Azure US West
 [x] 51ms - Azure HK
@@ -80,38 +114,33 @@ Select to connect:
 13.141.150.163
 ```
 
-Automatically select the fastest node:
-```bash
-$ gg --subscription https://your_subscription_link --fastest curl ipv4.appspot.com
-13.141.150.163
-```
-
 ### [WIP] Long-term use
 
 Write a config variable with `-w`:
 ```bash
-$ gg config -w subscription=https://your_subscription_link
+$ gg config -w subscription=https://example.com/path/to/sub
 $ gg curl ipv4.appspot.com
 13.141.150.163
 ```
 ```bash
-$ gg config -w node=vmess://your_share_link_of_a_node
+$ gg config -w node=vmess://MY_VMESS_SERVER_SHARE_LINK
 $ gg curl ipv4.appspot.com
 53.141.112.10
-```
-
-Read a config variable:
-```bash
-$ gg config node
-ss://your_share_link_of_a_node
 ```
 
 List config variables:
 ```bash
 $ gg config
-subscription=https://your_subscription_link
-subscription.select=fast
-cache.subscription.lastnode=trojan://the_link_of_a_node
+subscription=https://example.com/path/to/sub
+subscription.select=first
+subscription.cachelastnode=true
+cache.subscription.lastnode=trojan-go://MY_TROJAN_GO_SERVER_SHARE_LINK
+```
+
+Read a config variable:
+```bash
+$ gg config node
+vmess://MY_VMESS_SERVER_SHARE_LINK
 ```
 
 ## Support List

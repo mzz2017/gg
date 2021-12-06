@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/fatih/structs"
 	"reflect"
 	"strings"
 )
@@ -40,6 +41,14 @@ func Base64URLDecode(s string) (string, error) {
 	return string(raw), err
 }
 
+func ObjectToKV(v interface{}, tagName string) (kv []string) {
+	a := structs.New(v)
+	if tagName != "" {
+		a.TagName = tagName
+	}
+	return MapToKV(a.Map())
+}
+
 func MapToKV(m map[string]interface{}) (kv []string) {
 	val := reflect.ValueOf(m)
 	keys := val.MapKeys()
@@ -62,6 +71,14 @@ func StringsToSet(s []string) map[string]struct{} {
 	m := make(map[string]struct{})
 	for _, v := range s {
 		m[v] = struct{}{}
+	}
+	return m
+}
+
+func StringsMapToSet(s []string, mapper func(s string) string) map[string]struct{} {
+	m := make(map[string]struct{})
+	for _, v := range s {
+		m[mapper(v)] = struct{}{}
 	}
 	return m
 }
