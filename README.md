@@ -3,15 +3,15 @@
 gg is a command-line tool for one-click proxy in your research and development.
 
 You can just add `gg` before another command to redirect its traffic to your proxy without installing any other
-programs.
+programs like: `gg python -m pip install pytorch`.
 
-gg was inspired by [graftcp](https://github.com/hmgle/graftcp), and is a pure golang implementation with more useful
+gg, was inspired by [graftcp](https://github.com/hmgle/graftcp), is a pure golang implementation with more useful
 features.
 
 **Why did I create go-graft?**
 
-I am so tired of the poor network condition in my research and development. But I do not want to install v2ray in my
-working server because it is too heavy.
+I am so tired of the poor network condition in my research and development. But I do not want to install v2ray in the
+working servers because it is too heavy.
 
 Thus, I need a light and portable command-line tool to help me download and install dependencies and software on various
 servers.
@@ -31,7 +31,9 @@ Compared to proxychains or graftcp, we have the following advantages:
 1. Run this command to download the latest release of go-graft:
 
     ```bash
-    sudo curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
+    # sudo curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
+    # use mirror: 
+    sudo curl -L "https://hubmirror.v2raya.org/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
     sudo chmod +x /usr/local/bin/gg
     ```
 
@@ -173,12 +175,14 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 
 ### Protocol
 
-- [ ] VMess (AEAD)
+- [x] VMess (AEAD)
     - [x] tcp
     - [ ] ws
     - [ ] tls
+- [ ] VLESS
 - [x] Shadowsocks
     - [x] AEAD Ciphers
+    - [x] Simple-Obfs (not tested)
     - [ ] Stream Ciphers
 - [ ] ShadowsocksR
 - [ ] Trojan(-go)
