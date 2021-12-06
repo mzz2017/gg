@@ -4,5 +4,5 @@
   "linux-arm5": { "friendlyName": "linux-armv5" },
   "linux-arm64": { "friendlyName": "linux-aarch64" },
   "linux-arm6": { "friendlyName": "linux-armv6" },
-  "linux-arm7": { "friendlyName": "linux-armv7" },
+  "linux-arm7": { "friendlyName": "linux-armv7" }
 }
