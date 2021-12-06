@@ -77,32 +77,41 @@ func (p *Proxy) hijackDNS(data []byte) (resp []byte, isDNSQuery bool) {
 	// we only peek the first question.
 	// see https://stackoverflow.com/questions/4082081/requesting-a-and-aaaa-records-in-single-dns-query/4083071#4083071
 	q := dmsg.Questions[0]
+	var strAns string
 	switch q.Type {
 	case dnsmessage.TypeAAAA:
-		// empty answer
-		dmsg.RCode = dnsmessage.RCodeSuccess
-		dmsg.Response = true
-		dmsg.RecursionAvailable = true
-		dmsg.Truncated = false
-		b, _ := dmsg.Pack()
-		return b, true
-	case dnsmessage.TypeA:
-		ans := p.AllocProjection(q.Name.String()).As4()
+		ans, _ := netaddr.ParseIP("::ffff:" + p.AllocProjection(q.Name.String()).String())
+		strAns = ans.String()
 		dmsg.Answers = []dnsmessage.Resource{{
 			Header: dnsmessage.ResourceHeader{
 				Name:  q.Name,
 				Class: q.Class,
 				TTL:   10,
 			},
-			Body: &dnsmessage.AResource{A: ans},
+			Body: &dnsmessage.AAAAResource{AAAA: ans.As16()},
 		}}
-		p.log.Tracef("hijackDNS: lookup: %v to %v", q.Name.String(), ans)
+	case dnsmessage.TypeA:
+		ans := p.AllocProjection(q.Name.String())
+		strAns = ans.String()
+		dmsg.Answers = []dnsmessage.Resource{{
+			Header: dnsmessage.ResourceHeader{
+				Name:  q.Name,
+				Class: q.Class,
+				TTL:   10,
+			},
+			Body: &dnsmessage.AResource{A: ans.As4()},
+		}}
+	}
+	switch q.Type {
+	case dnsmessage.TypeA, dnsmessage.TypeAAAA:
+		p.log.Tracef("hijackDNS: lookup: %v to %v", q.Name.String(), strAns)
 		dmsg.RCode = dnsmessage.RCodeSuccess
 		dmsg.Response = true
 		dmsg.RecursionAvailable = true
 		dmsg.Truncated = false
 		b, _ := dmsg.Pack()
 		return b, true
+
 	}
 	return nil, true
 }

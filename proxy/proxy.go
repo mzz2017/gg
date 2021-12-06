@@ -18,11 +18,12 @@ type Proxy struct {
 	addrMapper   *LoopbackMapper // addrMapper projects an address to a loopback IP
 	domainMapper *ReservedMapper // domainMapper projects a domain to a reserved IP
 
-	log      *logrus.Logger
-	listener net.Listener
-	udpConn  *net.UDPConn
-	dialer   proxy.Dialer
-	closed   chan struct{}
+	log         *logrus.Logger
+	listener    net.Listener
+	udpConn     *net.UDPConn
+	dialer      proxy.Dialer
+	closed      chan struct{}
+	tcpListened chan struct{}
 
 	nm *UDPConnMapping
 }
@@ -34,6 +35,7 @@ func New(logger *logrus.Logger, dialer proxy.Dialer) *Proxy {
 		log:          logger,
 		dialer:       dialer,
 		closed:       make(chan struct{}),
+		tcpListened:  make(chan struct{}),
 		nm:           NewUDPConnMapping(),
 	}
 }
@@ -55,6 +57,17 @@ func (p *Proxy) GetProjection(loopback netaddr.IP) (target string) {
 	defer p.mutex.Unlock()
 	if loopback.IsLoopback() {
 		// address
+		//tgt := p.addrMapper.Get(loopback)
+		//tgtHost, _, err := net.SplitHostPort(tgt)
+		//if err != nil {
+		//	return tgt
+		//}
+		//log.Println(tgt, tgtHost)
+		//if tgtIP, err := netaddr.ParseIP(tgtHost); err == nil && ReservedPrefix.Contains(tgtIP) {
+		//	log.Println(p.domainMapper.Get(tgtIP))
+		//	return p.domainMapper.Get(tgtIP)
+		//}
+		//return tgt
 		return p.addrMapper.Get(loopback)
 	} else {
 		// domain
@@ -67,13 +80,20 @@ func (p *Proxy) ListenAndServe(port int) error {
 	addr := net.JoinHostPort("0.0.0.0", strconv.Itoa(port))
 	eCh := make(chan error, 2)
 	go func() {
-		e := p.ListenUDP(addr)
-		eCh <- e
-	}()
-	go func() {
 		e := p.ListenTCP(addr)
 		eCh <- e
 	}()
+	select {
+	case e := <-eCh:
+		return e
+	case <-p.tcpListened:
+		// clear
+		addr = net.JoinHostPort("0.0.0.0", strconv.Itoa(p.listener.Addr().(*net.TCPAddr).Port))
+		go func() {
+			e := p.ListenUDP(addr)
+			eCh <- e
+		}()
+	}
 	defer p.Close()
 	return <-eCh
 }
@@ -84,6 +104,7 @@ func (p *Proxy) ListenTCP(addr string) (err error) {
 		return err
 	}
 	p.listener = lt
+	close(p.tcpListened)
 	for {
 		conn, err := lt.Accept()
 		if err != nil {

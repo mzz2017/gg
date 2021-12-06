@@ -28,7 +28,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			Type:   int(args[1]),
 		}
 		t.saveSocketInfo(pid, fd, socketInfo)
-		t.log.Tracef("socket (%v): pid: %v, fd %v", t.network(&socketInfo), pid, fd)
+		t.log.Tracef("new socket (%v): pid: %v, fd %v", t.network(&socketInfo), pid, fd)
 	case syscall.SYS_FCNTL:
 		// syscall.SYS_FCNTL can be used to duplicate the file descriptor.
 		args := Arguments(regs)
@@ -61,24 +61,10 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 	//logrus.Println(regs.Orig_rax)
 	switch Inst(regs) {
-	case syscall.SYS_SOCKET:
-		args := Arguments(regs)
-		family := int(args[0])
-		typ := int(args[1])
-		// Convert all INET6 calls to INET4 calls because there is only one IPv6 loopback address but many IPv4 loopback addresses.
-		// And it is okay because they are all sent to our proxy agent and restore to their original address.
-		if family == syscall.AF_INET6 && (typ&syscall.SOCK_STREAM == syscall.SOCK_STREAM ||
-			typ&syscall.SOCK_DGRAM == syscall.SOCK_DGRAM) {
-			newRegs := *regs
-			SetArgument(&newRegs, 0, uint64(syscall.AF_INET))
-			if err = syscall.PtraceSetRegs(pid, &newRegs); err != nil {
-				return fmt.Errorf("set family for socket: %w", err)
-			}
-		}
 	case syscall.SYS_CONNECT, syscall.SYS_SENDTO:
-		t.log.Tracef("syscall.SYS_CONNECT || syscall.SYS_SENDTO")
 		args := Arguments(regs)
 		fd := args[0]
+		t.log.Tracef("syscall.SYS_CONNECT: pid: %v, fd: %v", pid, fd)
 		socketInfo, ok := t.checkSocket(pid, fd)
 		if !ok {
 			return nil
@@ -92,10 +78,12 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		)
 		switch Inst(regs) {
 		case syscall.SYS_CONNECT:
+			t.log.Tracef("syscall.SYS_CONNECT")
 			pSockAddr = args[1]
 			sockAddrLen = args[2]
 			orderSockAddrLen = 2
 		case syscall.SYS_SENDTO:
+			t.log.Tracef("syscall.SYS_SENDTO")
 			pSockAddr = args[4]
 			sockAddrLen = args[5]
 			orderSockAddrLen = 5
@@ -136,9 +124,9 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			}
 		}
 	case syscall.SYS_SENDMSG:
-		t.log.Tracef("syscall.SYS_SENDMSG")
 		args := Arguments(regs)
 		fd := args[0]
+		t.log.Tracef("syscall.SYS_SENDMSG: pid: %v, fd: %v", pid, fd)
 		socketInfo, ok := t.checkSocket(pid, fd)
 		if !ok {
 			return nil
@@ -266,9 +254,9 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	network := t.network(socketInfo)
 	port := t.port(socketInfo)
 	addr := *(*RawSockaddrInet4)(unsafe.Pointer(&bSockAddr[0]))
-	if addr.Addr[0] == 127 {
+	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() {
 		// skip loopback
-		t.log.Tracef("skip loopback: %v:%v", addr.Addr, binary.BigEndian.Uint16(addr.Port[:]))
+		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
 	}
 	//logrus.Traceln("before", bSockAddr)
@@ -300,38 +288,45 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 }
 
 func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sockAddrToPock []byte, err error) {
-	if socketInfo.Family != syscall.AF_INET {
-		return nil, fmt.Errorf("connect AF_INET6: unexpected socket family: %v, it should be: %v", socketInfo.Family, syscall.AF_INET)
-	}
-
 	network := t.network(socketInfo)
 	port := t.port(socketInfo)
 
 	addr := *(*RawSockaddrInet6)(unsafe.Pointer(&bSockAddr[0]))
-	logrus.Traceln(addr)
-	// the new size of sock_addr is smaller, so it is safe
-	originAddr := net.JoinHostPort(
-		netaddr.IPFrom16(addr.Addr).String(),
-		strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
-	)
-	loopback := t.proxy.AllocProjection(originAddr)
-	addrToPoke := RawSockaddrInet4{
-		Family: syscall.AF_INET,
-		Port:   [2]byte{},
-		Addr:   loopback.As4(),
-		Zero:   [8]uint8{},
+	ip := netaddr.IPFrom16(addr.Addr)
+	if ip.Is4in6() {
+		ip = netaddr.IPFrom4(ip.As4())
 	}
-	if netaddr.IPFrom16(addr.Addr).IsLoopback() {
-		// we only change the addr from ::1 to 127.0.0.1 for loopback address and keep the original port number
-		addrToPoke.Port = addr.Port
+	if ip.IsLoopback() {
+		// skip loopback
+		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
+		return nil, nil
+	}
+	var originAddr string
+	if proxy.ReservedPrefix.Contains(ip) {
+		originAddr = net.JoinHostPort(
+			t.proxy.GetProjection(ip), // get original domain
+			strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
+		)
 	} else {
-		binary.BigEndian.PutUint16(addrToPoke.Port[:], uint16(port))
+		originAddr = net.JoinHostPort(
+			netaddr.IPFrom16(addr.Addr).String(),
+			strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
+		)
 	}
-	bSockAddrToPock := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: uintptr(unsafe.Pointer(&addrToPoke)),
-		Cap:  binary.Size(addrToPoke),
-		Len:  binary.Size(addrToPoke),
+	loopback := t.proxy.AllocProjection(originAddr)
+	ipv4MappedIPv6, err := netaddr.ParseIP("::ffff:" + loopback.String())
+	if err != nil {
+		return nil, err
+	}
+	addr.Addr = ipv4MappedIPv6.As16()
+	binary.BigEndian.PutUint16(addr.Port[:], uint16(port))
+	_bSockAddrToPock := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
+		Data: uintptr(unsafe.Pointer(&addr)),
+		Cap:  binary.Size(addr),
+		Len:  binary.Size(addr),
 	}))
-	t.log.Tracef("handleINet6 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(loopback.String(), strconv.Itoa(port)))
+	t.log.Tracef("handleINet6 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(ipv4MappedIPv6.String(), strconv.Itoa(port)))
+	bSockAddrToPock := make([]byte, len(_bSockAddrToPock))
+	copy(bSockAddrToPock, _bSockAddrToPock)
 	return bSockAddrToPock, nil
 }

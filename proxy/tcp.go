@@ -15,6 +15,7 @@ func (p *Proxy) handleTCP(conn net.Conn) error {
 	if tgt == "" {
 		return fmt.Errorf("mapped target address not found")
 	}
+	p.log.Tracef("received tcp: %v, tgt: %v", conn.RemoteAddr().String(), tgt)
 	c, err := p.dialer.Dial("tcp", tgt)
 	if err != nil {
 		return err

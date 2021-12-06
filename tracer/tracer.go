@@ -134,11 +134,11 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 					entryStop := IsEntryStop(&regs)
 					if entryStop {
 						if err := t.entryHandler(child, &regs); err != nil {
-							logrus.Tracef("entryHandler: %v", err)
+							logrus.Infof("entryHandler: %v", err)
 						}
 					} else {
 						if err := t.exitHandler(child, &regs); err != nil {
-							logrus.Tracef("exitHandler: %v", err)
+							logrus.Infof("exitHandler: %v", err)
 						}
 					}
 				}
