@@ -3,11 +3,11 @@ module github.com/mzz2017/gg
 go 1.17
 
 require (
-	github.com/BurntSushi/toml v0.3.1
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v1.1.7
 	github.com/fatih/structs v1.1.0
 	github.com/json-iterator/go v1.1.12
+	github.com/pelletier/go-toml v1.9.4
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
@@ -43,7 +43,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mzz2017/disk-bloom v1.0.1 // indirect
-	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c // indirect
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
@@ -65,8 +64,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-//replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => ../BitterJohn
-replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211205144004-aab9895a0b7f
+replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => ../BitterJohn
+
+//replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211205144004-aab9895a0b7f
 
 replace (
 	github.com/spf13/cobra => github.com/mzz2017/cobra v0.0.0-20211205075040-2b7f80d9e0b4

@@ -146,7 +146,7 @@ func (p *Proxy) GetOrBuildUDPConn(lAddr net.Addr, target string, data []byte) (r
 		p.nm.Unlock()
 		// relay
 		go func() {
-			if e := p.relay(lAddr, rc, conn.Timeout); e != nil {
+			if e := p.relayUDP(lAddr, rc, conn.Timeout); e != nil {
 				p.log.Tracef("shadowsocks.udp.relay: %v", e)
 			}
 			p.nm.Lock()
@@ -170,7 +170,7 @@ func (p *Proxy) GetOrBuildUDPConn(lAddr net.Addr, target string, data []byte) (r
 	return rc, nil
 }
 
-func (p *Proxy) relay(laddr net.Addr, rConn net.PacketConn, timeout time.Duration) (err error) {
+func (p *Proxy) relayUDP(laddr net.Addr, rConn net.PacketConn, timeout time.Duration) (err error) {
 	buf := pool.Get(ip_mtu_trie.MTUTrie.GetMTU(rConn.LocalAddr().(*net.UDPAddr).IP))
 	defer pool.Put(buf)
 	var n int
@@ -182,6 +182,10 @@ func (p *Proxy) relay(laddr net.Addr, rConn net.PacketConn, timeout time.Duratio
 			return fmt.Errorf("rConn.ReadFrom: %v", err)
 		}
 		p.log.Tracef("readfrom: %v", buf[:n])
+		//var dmsg dnsmessage.Message
+		//if err := dmsg.Unpack(buf[:n]); err == nil {
+		//	p.log.Traceln(dmsg)
+		//}
 		_ = p.udpConn.SetWriteDeadline(time.Now().Add(server.DefaultNatTimeout)) // should keep consistent
 		_, err = p.udpConn.WriteTo(buf[:n], laddr)
 		if err != nil {

@@ -44,7 +44,6 @@ cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RX
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/1lann/promptui v0.0.0-20201231203810-3d80f6bc68f3/go.mod h1:3P0+3evH4fOxxRnYU8pEyLeUBIhos0aB7SPBwH9XvWA=
-github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
@@ -84,8 +83,6 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 h1:BS21ZUJ/B5X2UVUbczfmdWH7GapPWAhxcMsDnjJTU1E=
 github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165/go.mod h1:c9O8+fpSOX1DM8cPNSkX/qsBWdkD4yd2dpciOWQjpBw=
 github.com/dvyukov/go-fuzz v0.0.0-20210103155950-6a8e9d1f2415/go.mod h1:11Gm+ccJnvAhCNLlf5+cS9KjtbaD5I5zaZpFMsTHWTw=
-github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211205144004-aab9895a0b7f h1:6KLlUtk2OoGMEOaQbdZr0Tsgmzv7yLGSTVIb+eYxAAw=
-github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211205144004-aab9895a0b7f/go.mod h1:ZCkcMgx0rZCujdqRMc+gaMX7pcLlZ8FkQfYvdW+wb7k=
 github.com/e14914c0-6759-480d-be89-66b7b7676451/SweetLisa v0.0.0-20211106045307-739b77368531 h1:lY4t3sokbrH239mzvlWMp8kurXoMZgmclL/KFPFlsHY=
 github.com/e14914c0-6759-480d-be89-66b7b7676451/SweetLisa v0.0.0-20211106045307-739b77368531/go.mod h1:eQvYQUXaZ8LhTBy2v9es5y/zId5UOFP1PokzlX/ZZs4=
 github.com/eknkc/basex v1.0.1 h1:TcyAkqh4oJXgV3WYyL4KEfCMk9W8oJCpmx1bo+jVgKY=
