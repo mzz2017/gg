@@ -99,7 +99,7 @@ Testing upload speed............................................................
 Upload: 96.35 Mbit/s
 ```
 
-**[WIP] Use subscription**
+**Use subscription**
 
 Automatically select the first available node from the subscription:
 
@@ -128,7 +128,7 @@ Select to connect:
 13.141.150.163
 ```
 
-### [WIP] Long-term use
+### Long-term use
 
 Write a config variable with `-w`:
 
