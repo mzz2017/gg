@@ -185,7 +185,9 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
     - [x] Simple-Obfs (not tested)
     - [ ] Stream Ciphers
 - [ ] ShadowsocksR
-- [ ] Trojan(-go)
+- [x] Trojan
+    - [x] Trojan-GFW
+    - [ ] Trojan-go
 - [ ] HTTP(S)
 - [ ] Socks5
 

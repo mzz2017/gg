@@ -83,6 +83,8 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 h1:BS21ZUJ/B5X2UVUbczfmdWH7GapPWAhxcMsDnjJTU1E=
 github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165/go.mod h1:c9O8+fpSOX1DM8cPNSkX/qsBWdkD4yd2dpciOWQjpBw=
 github.com/dvyukov/go-fuzz v0.0.0-20210103155950-6a8e9d1f2415/go.mod h1:11Gm+ccJnvAhCNLlf5+cS9KjtbaD5I5zaZpFMsTHWTw=
+github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211206145822-8b6d8d97500f h1:JM2z2LKs27zgixfvvUcEn1hMKcYu0TMKLIb9DxYOaM8=
+github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211206145822-8b6d8d97500f/go.mod h1:ZCkcMgx0rZCujdqRMc+gaMX7pcLlZ8FkQfYvdW+wb7k=
 github.com/e14914c0-6759-480d-be89-66b7b7676451/SweetLisa v0.0.0-20211106045307-739b77368531 h1:lY4t3sokbrH239mzvlWMp8kurXoMZgmclL/KFPFlsHY=
 github.com/e14914c0-6759-480d-be89-66b7b7676451/SweetLisa v0.0.0-20211106045307-739b77368531/go.mod h1:eQvYQUXaZ8LhTBy2v9es5y/zId5UOFP1PokzlX/ZZs4=
 github.com/eknkc/basex v1.0.1 h1:TcyAkqh4oJXgV3WYyL4KEfCMk9W8oJCpmx1bo+jVgKY=
