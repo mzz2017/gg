@@ -3,7 +3,7 @@
 gg is a command-line tool for one-click proxy in your research and development.
 
 You can just add `gg` before another command to redirect its traffic to your proxy without installing any other
-programs like: `gg python -m pip install pytorch`.
+programs like: `sudo gg apt-get install -y nvidia-docker2`.
 
 gg, was inspired by [graftcp](https://github.com/hmgle/graftcp), is a pure golang implementation with more useful
 features.
@@ -32,7 +32,7 @@ Compared to proxychains or graftcp, we have the following advantages:
 
     ```bash
     # sudo curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
-    # use mirror: 
+    # use the mirror:
     sudo curl -L "https://hubmirror.v2raya.org/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
     sudo chmod +x /usr/local/bin/gg
     ```
