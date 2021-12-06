@@ -1,5 +1,4 @@
-//go:build (linux && amd64) || (darwin && amd64)
-// +build linux,amd64 darwin,amd64
+//go:build linux && arm64
 
 package tracer
 
@@ -30,45 +29,49 @@ type RawMsgHdr struct {
 	MsgIov        uint64
 	LenMsgIov     uint64
 	MsgControl    uint64
-	LenMsgControl int32
+	LenMsgControl uint64
 	Flags         int32
 }
 
 func arguments(regs *syscall.PtraceRegs) []uint64 {
 	return []uint64{
-		regs.Rdi,
-		regs.Rsi,
-		regs.Rdx,
-		regs.R10,
-		regs.R8,
-		regs.R9,
+		regs.Regs[0],
+		regs.Regs[1],
+		regs.Regs[2],
+		regs.Regs[3],
+		regs.Regs[4],
+		regs.Regs[5],
 	}
 }
 
 func setArgument(regs *syscall.PtraceRegs, order int, val uint64) {
 	switch order {
 	case 0:
-		regs.Rdi = val
+		regs.Regs[0] = val
 	case 1:
-		regs.Rsi = val
+		regs.Regs[1] = val
 	case 2:
-		regs.Rdx = val
+		regs.Regs[2] = val
 	case 3:
-		regs.R10 = val
+		regs.Regs[3] = val
 	case 4:
-		regs.R8 = val
+		regs.Regs[4] = val
 	case 5:
-		regs.R9 = val
+		regs.Regs[5] = val
 	}
 }
 
 func returnValueInt(regs *syscall.PtraceRegs) (int, syscall.Errno) {
-	if int64(regs.Rax) < 0 {
-		return int(regs.Rax), syscall.Errno(^regs.Rax)
+	if int64(regs.Pstate) < 0 {
+		return int(regs.Regs[0]), syscall.Errno(^regs.Regs[0])
 	}
-	return int(regs.Rax), 0
+	return int(regs.Regs[0]), 0
 }
 
 func isEntryStop(regs *syscall.PtraceRegs) bool {
-	return int64(regs.Rax) == -int64(syscall.ENOSYS)
+	return int64(regs.Regs[0]) == -int64(syscall.ENOSYS)
+}
+
+func inst(regs *syscall.PtraceRegs) int {
+	return int(regs.Regs[8])
 }

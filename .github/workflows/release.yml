@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  release:
+    types: [prereleased]
+  push:
+    branches:
+      - main
+      - v*
+      - dev*
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/*.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/*.yml"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        goos: [linux]
+        goarch: [amd64 386 arm64 arm]
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      GOARM: ${{ matrix.goarm }}
+      CGO_ENABLED: 0
+
+    steps:
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Show workflow information
+        id: get_filename
+        run: |
+          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM\"].friendlyName" -r < release/friendly-filenames.json)
+          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
+          echo "::set-output name=ASSET_NAME::$_NAME"
+          echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          stable: true
+          go-version: '1.17'
+
+      - name: Get project dependencies
+        run: go mod download
+
+      - name: Build gg
+        run: |
+          v=$(echo ${{ steps.get_version.outputs.VERSION }} | cut -c2-)
+          mkdir -p build_assets
+          go build -v -o build_assets/gg -trimpath -ldflags "-X github.com/mzz2017/gg/cmd.Version=$v -s -w -buildid=" .
+
+
+      - name: Create ZIP archive
+        run: |
+          FILE=./gg-$ASSET_NAME
+          DGST=$FILE.dgst
+          openssl dgst -md5    $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha1   $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha256 $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
+      - name: Upload ZIP file to Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: gg-${{ steps.get_filename.outputs.ASSET_NAME }}
+          path: gg-${{ steps.get_filename.outputs.ASSET_NAME }}
+
+      - name: Upload files to GitHub release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: ./gg-${{ steps.get_filename.outputs.ASSET_NAME }}*
+          tag: ${{ github.ref }}

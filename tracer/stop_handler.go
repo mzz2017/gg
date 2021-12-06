@@ -14,7 +14,8 @@ import (
 )
 
 func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
-	switch regs.Orig_rax {
+	// FIXME: arm64 will overwrite the args[0] at exit-stop
+	switch Inst(regs) {
 	case syscall.SYS_SOCKET:
 		fd, errno := ReturnValueInt(regs)
 		if errno != 0 {
@@ -59,7 +60,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 
 func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 	//logrus.Println(regs.Orig_rax)
-	switch regs.Orig_rax {
+	switch Inst(regs) {
 	case syscall.SYS_SOCKET:
 		args := Arguments(regs)
 		family := int(args[0])
@@ -89,7 +90,7 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			pSockAddr, sockAddrLen uint64
 			orderSockAddrLen       int
 		)
-		switch regs.Orig_rax {
+		switch Inst(regs) {
 		case syscall.SYS_CONNECT:
 			pSockAddr = args[1]
 			sockAddrLen = args[2]

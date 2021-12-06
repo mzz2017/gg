@@ -28,3 +28,6 @@ func IsEntryStop(regs *syscall.PtraceRegs) bool {
 	return isEntryStop(regs)
 }
 
+func Inst(regs *syscall.PtraceRegs) int {
+	return inst(regs)
+}

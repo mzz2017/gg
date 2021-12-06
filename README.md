@@ -1,15 +1,20 @@
 # gg (go-graft)
+
 gg is a command-line tool for one-click proxy in your research and development.
 
-You can just add `gg` before another command to redirect its traffic to your proxy without installing any other programs.
+You can just add `gg` before another command to redirect its traffic to your proxy without installing any other
+programs.
 
-gg was inspired by [graftcp](https://github.com/hmgle/graftcp), and is a pure golang implementation with more useful features.
+gg was inspired by [graftcp](https://github.com/hmgle/graftcp), and is a pure golang implementation with more useful
+features.
 
 **Why I created go-graft?**
 
-I am so tired of the poor network condition in my research and development. But I do not want to install v2ray in my working server because it is too heavy.
+I am so tired of the poor network condition in my research and development. But I do not want to install v2ray in my
+working server because it is too heavy.
 
-Thus, I need a light and portable command-line tool to help me download and install dependencies and software on various servers.
+Thus, I need a light and portable command-line tool to help me download and install dependencies and software on various
+servers.
 
 **Advantages**
 
@@ -17,9 +22,11 @@ Compared to proxychains or graftcp, we have the following advantages:
 
 1. Use it independently without any other proxy utils.
 2. UDP support.
-3. Support golang programs. See [applications built by Go can not be hook by proxychains-ng](https://github.com/rofl0r/proxychains-ng/issues/199).
+3. Support golang programs.
+   See [applications built by Go can not be hook by proxychains-ng](https://github.com/rofl0r/proxychains-ng/issues/199)
+   .
 
-## [WIP] Installation
+## Installation
 
 1. Run this command to download the latest release of go-graft:
 
@@ -28,13 +35,13 @@ Compared to proxychains or graftcp, we have the following advantages:
     sudo chmod +x /usr/local/bin/gg
     ```
 
-    > If the command gg `fails` after installation, check your path.
-    > 
-    > You can also create a symbolic link to /usr/bin or any other directory in your path.
-    >
-    > For example:
-    >
-    > ```bash
+   > If the command gg `fails` after installation, check your path.
+   >
+   > You can also create a symbolic link to /usr/bin or any other directory in your path.
+   >
+   > For example:
+   >
+   > ```bash
     > sudo ln -s /usr/local/bin/gg /usr/bin/gg
     > ```
 2. Test the installation.
@@ -44,6 +51,7 @@ Compared to proxychains or graftcp, we have the following advantages:
    ```
 
 ## Usage
+
 **Examples:**
 
 ```bash
@@ -75,7 +83,7 @@ frp.tar.gz 100%[=====================================================>] 8.44M 12
 2021-12-06 09:21:08 (12.2 MB/s) - ‘frp.tar.gz’ saved [8848900/8848900]
 ```
 
-Or use `--node`: 
+Or use `--node`:
 
 ```bash
 $ gg --node ss://YWVzLTEyOC1nY206MQ@example.com:17247 speedtest
@@ -92,6 +100,7 @@ Upload: 96.35 Mbit/s
 **[WIP] Use subscription**
 
 Automatically select the first available node from the subscription:
+
 ```bash
 $ gg --subscription https://example.com/path/to/sub docker pull caddy
 Using default tag: latest
@@ -107,6 +116,7 @@ docker.io/library/caddy:latest
 ```
 
 Select the node manually:
+
 ```bash
 $ gg --subscription https://example.com/path/to/sub --select curl ipv4.appspot.com
 Select to connect:
@@ -119,11 +129,13 @@ Select to connect:
 ### [WIP] Long-term use
 
 Write a config variable with `-w`:
+
 ```bash
 $ gg config -w subscription=https://example.com/path/to/sub
 $ gg curl ipv4.appspot.com
 13.141.150.163
 ```
+
 ```bash
 $ gg config -w node=vmess://MY_VMESS_SERVER_SHARE_LINK
 $ gg curl ipv4.appspot.com
@@ -131,15 +143,20 @@ $ gg curl ipv4.appspot.com
 ```
 
 List config variables:
+
 ```bash
 $ gg config
-subscription=https://example.com/path/to/sub
+node=
+subscription.link=https://example.com/path/to/sub
 subscription.select=first
-subscription.cachelastnode=true
-cache.subscription.lastnode=trojan-go://MY_TROJAN_GO_SERVER_SHARE_LINK
+subscription.cache_last_node=true
+cache.subscription.last_node=trojan-go://MY_TROJAN_GO_SERVER_SHARE_LINK
+no_udp=false
+test_node_before_use=true
 ```
 
 Read a config variable:
+
 ```bash
 $ gg config node
 vmess://MY_VMESS_SERVER_SHARE_LINK
@@ -150,19 +167,19 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 ### OS/Arch
 
 - [x] Linux/amd64
-- [ ] Linux/386
-- [ ] Linux/arm64
-- [ ] Linux/arm
+- [x] Linux/386 (not tested)
+- [ ] Linux/arm64 (may have some problem)
+- [x] Linux/arm (not tested)
 
 ### Protocol
 
-- [ ] VMess
-  - [x] tcp (AEAD)
-  - [ ] ws
-  - [ ] tls
+- [ ] VMess (AEAD)
+    - [x] tcp
+    - [ ] ws
+    - [ ] tls
 - [x] Shadowsocks
-  - [x] AEAD Ciphers
-  - [ ] Stream Ciphers
+    - [x] AEAD Ciphers
+    - [ ] Stream Ciphers
 - [ ] Trojan
 - [ ] Trojan-go
 - [ ] HTTP(S)
@@ -178,5 +195,6 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 - [ ] Quantumult X
 
 ## TODO
+
 1. Use system DNS as the fallback.
 2. Restore the IP of connect that family is AF_LINKLAYER and others.
