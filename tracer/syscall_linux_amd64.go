@@ -73,5 +73,5 @@ func isEntryStop(regs *syscall.PtraceRegs) bool {
 }
 
 func inst(regs *syscall.PtraceRegs) int {
-	return regs.Orig_rax
+	return int(regs.Orig_rax)
 }

@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         goos: [linux]
-        goarch: [amd64, 386, arm64, arm]
+        goarch: [amd64, arm64, arm]
       fail-fast: false
 
     runs-on: ubuntu-latest
@@ -58,6 +58,10 @@ jobs:
         with:
           stable: true
           go-version: '1.17'
+      - name: Install UPX
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          sudo apt-get install -y upx
 
       - name: Get project dependencies
         run: go mod download
@@ -67,7 +71,7 @@ jobs:
           v=$(echo ${{ steps.get_version.outputs.VERSION }} | cut -c2-)
           mkdir -p build_assets
           go build -v -o build_assets/gg -trimpath -ldflags "-X github.com/mzz2017/gg/cmd.Version=$v -s -w -buildid=" .
-
+          upx build_assets/gg
 
       - name: Create ZIP archive
         run: |
