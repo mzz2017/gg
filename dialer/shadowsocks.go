@@ -70,6 +70,7 @@ func NewShadowsocks(link string) (*Dialer, error) {
 		Dialer:     dialer,
 		supportUDP: supportUDP,
 		name:       s.Name,
+		link:       link,
 	}, nil
 }
 

@@ -66,7 +66,7 @@ nextField:
 	for i := 0; i < ift.NumField(); i++ {
 		v := ifv.Field(i)
 		t := ift.Field(i)
-		tv, ok := t.Tag.Lookup("toml")
+		tv, ok := t.Tag.Lookup("mapstructure")
 		if !ok {
 			continue
 		}

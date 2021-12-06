@@ -9,7 +9,7 @@ gg was inspired by [graftcp](https://github.com/hmgle/graftcp), and is a pure go
 
 I am so tired of the poor network condition in my research and development. But I do not want to install v2ray in my working server because it is too heavy.
 
-Thus I need a light and portable command-line tool to help me download and install dependencies and software on various servers. And then, gg was born.
+Thus, I need a light and portable command-line tool to help me download and install dependencies and software on various servers.
 
 **Advantages**
 
@@ -21,20 +21,22 @@ Compared to proxychains or graftcp, we have the following advantages:
 
 ## [WIP] Installation
 
-1. Run this command to download the current stable release of Docker Compose:
+1. Run this command to download the latest release of go-graft:
 
     ```bash
     sudo curl -L "https://github.com/mzz2017/gg/releases/download/0.1.0/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
     sudo chmod +x /usr/local/bin/gg
     ```
 
-    If the command gg fails after installation, check your path. You can also create a symbolic link to /usr/bin or any other directory in your path.
-
-    For example:
-
-    ```bash
-    sudo ln -s /usr/local/bin/gg /usr/bin/gg
-    ```
+    > If the command gg `fails` after installation, check your path.
+    > 
+    > You can also create a symbolic link to /usr/bin or any other directory in your path.
+    >
+    > For example:
+    >
+    > ```bash
+    > sudo ln -s /usr/local/bin/gg /usr/bin/gg
+    > ```
 2. Test the installation.
    ```bash
    $ gg --version
@@ -42,7 +44,7 @@ Compared to proxychains or graftcp, we have the following advantages:
    ```
 
 ## Usage
-**Example:**
+**Examples:**
 
 ```bash
 # use subscription:
@@ -53,7 +55,6 @@ $ gg config -w subscription=https://example.com/path/to/sub
 
 # test with cloning linux repo:
 $ gg git clone --depth=1 https://github.com/torvalds/linux.git
-Enter the share-link of your proxy: ss://YWVzLTEyOC1nY206MQ@example.com:17247
 Cloning into 'linux'...
 ...
 Receiving objects: 100% (78822/78822), 212.19 MiB | 7.04 MiB/s, done.
@@ -65,12 +66,13 @@ Resolving deltas: 100% (7155/7155), done.
 **Use share-link**
 
 ```bash
-$ gg git clone --depth=1 https://github.com/torvalds/linux.git
-Enter the share-link of your proxy: ss://YWVzLTEyOC1nY206MQ@example.com:17247
-Cloning into 'linux'...
+# if no configuration was written before
+$ gg wget -O frp.tar.gz https://github.com/fatedier/frp/releases/download/v0.38.0/frp_0.38.0_linux_amd64.tar.gz
+Enter the share-link of your proxy: ********
 ...
-Receiving objects: 100% (78822/78822), 212.19 MiB | 7.04 MiB/s, done.
-Resolving deltas: 100% (7155/7155), done.
+Saving to: ‘frp.tar.gz’
+frp.tar.gz 100%[=====================================================>] 8.44M 12.2MB/s in 0.7s    
+2021-12-06 09:21:08 (12.2 MB/s) - ‘frp.tar.gz’ saved [8848900/8848900]
 ```
 
 Or use `--node`: 
@@ -155,7 +157,9 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 ### Protocol
 
 - [ ] VMess
-  - [x] vmess + tcp (AEAD)
+  - [x] tcp (AEAD)
+  - [ ] ws
+  - [ ] tls
 - [x] Shadowsocks
   - [x] AEAD Ciphers
   - [ ] Stream Ciphers
@@ -164,9 +168,9 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 - [ ] HTTP(S)
 - [ ] Socks5
 
-### [WIP] Subscription
+### Subscription
 
-- [ ] base64 (v2rayN, etc.)
+- [x] base64 (v2rayN, etc.)
 - [ ] SIP008
 - [ ] clash
 - [ ] surge

@@ -14,6 +14,7 @@ type Dialer struct {
 	proxy.Dialer
 	supportUDP bool
 	name       string
+	link       string
 }
 
 func (d *Dialer) SupportUDP() bool {
@@ -22,6 +23,11 @@ func (d *Dialer) SupportUDP() bool {
 
 func (d *Dialer) Name() string {
 	return d.name
+}
+
+
+func (d *Dialer) Link() string {
+	return d.link
 }
 
 func (d *Dialer) Test(ctx context.Context) (bool, error) {

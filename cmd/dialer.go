@@ -1,4 +1,4 @@
-package infra
+package cmd
 
 import (
 	"bufio"
@@ -8,6 +8,7 @@ import (
 	"github.com/mzz2017/gg/config"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"net/url"
 	"os"
 	"strings"
@@ -71,24 +72,34 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool) (d *dialer.Dia
 	switch config.ParamsObj.Subscription.Select {
 	case "manual":
 		if config.ParamsObj.Subscription.CacheLastNode {
-			d := GetDialerFromSubscriptionLastNodeCache(testNode)
+			d = GetDialerFromSubscriptionLastNodeCache(testNode)
 			if d != nil {
-				log.Infoln("Use cached node.")
+				log.Infof("Use the cached node: %v\n", d.Name())
 				return d, nil
 			}
+			defer func() {
+				if d != nil {
+					_ = cacheSubscriptionNode(log, d)
+				}
+			}()
 		}
 		// TODO
-		log.Fatal("TODO: manual select")
+		log.Fatal("TODO: manual selection")
 	default:
 		log.Warnf("Unexpected select option: %v. Fallback to \"first\".", config.ParamsObj.Subscription.Select)
 		fallthrough
 	case "first":
 		if config.ParamsObj.Subscription.CacheLastNode {
-			d := GetDialerFromSubscriptionLastNodeCache(testNode)
+			d = GetDialerFromSubscriptionLastNodeCache(testNode)
 			if d != nil {
-				log.Infoln("Use cached node.")
+				log.Infof("Use the cached node: %v\n", d.Name())
 				return d, nil
 			}
+			defer func() {
+				if d != nil {
+					_ = cacheSubscriptionNode(log, d)
+				}
+			}()
 		}
 		log.Infoln("Pulling the subscription...")
 		dialers, err := getDialersFromSubscription(log, config.ParamsObj.Subscription.Link)
@@ -107,6 +118,21 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool) (d *dialer.Dia
 		}
 	}
 	return nil, fmt.Errorf("cannot find any available node in your subscription, and you can try again with argument '-vv' to get more information")
+}
+
+func cacheSubscriptionNode(log *logrus.Logger, d *dialer.Dialer) error {
+	v, configPath := getConfig(log, false, viper.New, nil)
+	m := v.AllSettings()
+	if v.GetString("subscription.link") == "" {
+		// do not cache if config: "cache.subscription.link" is empty
+		log.Traceln("did not cache the node because config: \"cache.subscription.link\" was empty")
+		return nil
+	}
+	log.Tracef("cache the node: %v: %v\n", d.Name(), d.Link())
+	if err := config.SetValueHierarchicalMap(m, completeKey("cache.subscription.last_node"), d.Link()); err != nil {
+		return err
+	}
+	return WriteConfig(m, configPath)
 }
 
 func firstAvailableDialer(log *logrus.Logger, dialers []*dialer.Dialer) *dialer.Dialer {

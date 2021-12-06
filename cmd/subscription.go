@@ -1,4 +1,4 @@
-package infra
+package cmd
 
 import (
 	"github.com/mzz2017/gg/common"
