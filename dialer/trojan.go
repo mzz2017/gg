@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	"github.com/mzz2017/gg/dialer/transport/tls"
+	"github.com/mzz2017/gg/dialer/transport/ws"
 	"golang.org/x/net/proxy"
 	"net"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 func init() {
 	FromLinkRegister("trojan", NewTrojan)
-	// TODO: trojan-go
-	//FromLinkRegister("trojan-go", NewTrojan)
+	FromLinkRegister("trojan-go", NewTrojan)
 }
 
 type Trojan struct {
@@ -36,15 +37,42 @@ func NewTrojan(link string) (*Dialer, error) {
 		return nil, err
 	}
 	var dialer proxy.Dialer = proxy.Direct
-	uTLS := url.URL{
+	u := url.URL{
 		Scheme: "tls",
 		Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 		RawQuery: url.Values{
 			"sni": []string{s.Sni},
 		}.Encode(),
 	}
-	if dialer, err = tls.NewTls(uTLS.String(), dialer); err != nil {
+	if dialer, err = tls.NewTls(u.String(), dialer); err != nil {
 		return nil, err
+	}
+	if s.Protocol == "trojan-go" {
+		// "tls,ws,ss,trojanc"
+		if s.Type == "ws" {
+			u = url.URL{
+				Scheme: "ws",
+				Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+				RawQuery: url.Values{
+					"host": []string{s.Host},
+					"path": []string{s.Path},
+				}.Encode(),
+			}
+			if dialer, err = ws.NewWs(u.String(), dialer); err != nil {
+				return nil, err
+			}
+		}
+		if strings.HasPrefix(s.Encryption, "ss;") {
+			fields := strings.SplitN(s.Encryption, ";", 3)
+			if dialer, err = protocol.NewDialer("shadowsocks", dialer, protocol.Header{
+				ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+				Cipher:       fields[1],
+				Password:     fields[2],
+				IsClient:     false,
+			}); err != nil {
+				return nil, err
+			}
+		}
 	}
 	if dialer, err = protocol.NewDialer("trojanc", dialer, protocol.Header{
 		ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),

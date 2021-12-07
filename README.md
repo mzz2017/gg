@@ -184,11 +184,11 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
     - [x] AEAD Ciphers
     - [x] Simple-obfs (not tested)
     - [ ] Stream Ciphers
+- [x] ShadowsocksR
 - [x] Trojan
     - [x] Trojan-gfw
-    - [ ] Trojan-go
+    - [x] Trojan-go
 - [ ] VLESS
-- [ ] ShadowsocksR
 - [ ] HTTP(S)
 - [ ] Socks5
 
