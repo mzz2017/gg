@@ -260,7 +260,7 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	network := t.network(socketInfo)
 	port := t.port(socketInfo)
 	addr := *(*RawSockaddrInet4)(unsafe.Pointer(&bSockAddr[0]))
-	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() {
+	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() && port != 53 {
 		// skip loopback
 		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
@@ -302,7 +302,7 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	if ip.Is4in6() {
 		ip = netaddr.IPFrom4(ip.As4())
 	}
-	if ip.IsLoopback() {
+	if ip.IsLoopback() && port != 53 {
 		// skip loopback
 		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
