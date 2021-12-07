@@ -4,74 +4,69 @@
 
 # gg (go-graft)
 
-gg is a command-line tool for one-click proxy in your research and development.
+gg 是一个命令行工具，可在 Linux 环境下对任意命令进行一键代理，而无需安装 v2ray 等其他工具。
 
-You can just add `gg` before another command to redirect its traffic to your proxy without installing v2ray or anything else. Usage example: `sudo gg apt-get install -y nvidia-docker2`.
+你只需要在想代理的命令之前添加 `gg` 即可，例如: `sudo gg apt-get install -y nvidia-docker2`.
 
-It was inspired by [graftcp](https://github.com/hmgle/graftcp), is a pure golang implementation with more useful
-features.
+感谢 [graftcp](https://github.com/hmgle/graftcp) 带来的灵感，gg 是它的一个纯 Go 语言实现，并且拥有更多的有用特性。
 
-**Why did I create go-graft?**
+**我为什么编写 go-graft？**
 
-I am so tired of the poor network condition in my research and development. But I do not want to install v2ray in the
-working servers because it is too heavy.
+我已经厌倦了我在科研和开发中所遇到的糟糕的网络状况。但我并不希望在我的几台工作服务器上安装 v2ray，因为它太笨重了，且配置麻烦。
 
-Thus, I need a light and portable command-line tool to help me download and install dependencies and software on various
-servers.
+因此，我需要一个轻巧便携的命令行工具来帮助我在各种服务器上下载和安装依赖项和软件。
 
-**Advantages**
+**优势**
 
-Compared to proxychains or graftcp, we have the following advantages:
+相比较于 proxychains 或 graftcp，go-graft 拥有以下优势:
 
-1. Use it independently without any other proxy utils.
-2. UDP support.
-3. Support golang programs.
-   See [applications built by Go can not be hook by proxychains-ng](https://github.com/rofl0r/proxychains-ng/issues/199)
-   .
+1. gg 下载即用，不需要安装任何额外的工具。
+2. 支持 UDP，从而有效应对 DNS 污染。
+3. 支持 Go 语言编写的程序。见 [applications built by Go can not be hook by proxychains-ng](https://github.com/rofl0r/proxychains-ng/issues/199) 。
 
-## Installation
+## 安装
 
-1. Run this command to download the latest release of go-graft:
+1. 运行如下命令下载安装 go-graft 最新的版本：
 
     ```bash
     # sudo curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
-    # use the mirror:
+    # 使用镜像以加速:
     sudo curl -L "https://hubmirror.v2raya.org/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
     sudo chmod +x /usr/local/bin/gg
     ```
 
-   > If the command gg `fails` after installation, check your path.
+   > 如果安装完毕后 gg 命令运行 `失败`，请检查 `$PATH`.
    >
-   > You can also create a symbolic link to /usr/bin or any other directory in your path.
+   > 你也可以创建一个到 /usr/bin 的软链接。
    >
-   > For example:
+   > 例如：
    >
    > ```bash
    > sudo ln -s /usr/local/bin/gg /usr/bin/gg
    > ```
-2. Test the installation.
+2. 测试安装是否成功:
    ```bash
    $ gg --version
    gg version 0.1.1
    ```
 
-## Usage
+## 使用方法
 
-**Examples:**
+**例如：**
 
-Configure the subscription:
+配置你的订阅地址:
 
 ```bash
 gg config -w subscription=https://example.com/path/to/sub
 ```
 
-Test with cloning linux repo:
+克隆 linux 仓库来试试效果：
 
 ```bash
 gg git clone --depth=1 https://github.com/torvalds/linux.git
 ```
 
-Output:
+输出:
 
 > ```
 > Cloning into 'linux'...
@@ -80,12 +75,12 @@ Output:
 > Resolving deltas: 100% (7155/7155), done.
 > ```
 
-### Temporarily use
+### 临时使用
 
-**Use share-link**
+**使用分享链接**
 
 ```bash
-# if no configuration was written before, a share-link will be required to input.
+# 如果你之前没有写过配置项，将会提示你输入订阅链接。
 gg wget -O frp.tar.gz https://github.com/fatedier/frp/releases/download/v0.38.0/frp_0.38.0_linux_amd64.tar.gz
 ```
 
@@ -97,7 +92,7 @@ gg wget -O frp.tar.gz https://github.com/fatedier/frp/releases/download/v0.38.0/
 > 2021-12-06 09:21:08 (12.2 MB/s) - ‘frp.tar.gz’ saved [8848900/8848900]
 > ```
 
-Or use `--node`:
+或者显式地使用 `--node`:
 
 ```bash
 gg --node ss://YWVzLTEyOC1nY206MQ@example.com:17247 speedtest
@@ -114,9 +109,9 @@ gg --node ss://YWVzLTEyOC1nY206MQ@example.com:17247 speedtest
 > Upload: 96.35 Mbit/s
 > ```
 
-**Use subscription**
+**使用订阅地址**
 
-By default, gg will automatically select the first available node from the subscription:
+默认情况下 gg 会从你的订阅中自动挑选第一个可用的节点：
 
 ```bash
 gg --subscription https://example.com/path/to/sub docker pull caddy
@@ -135,7 +130,7 @@ gg --subscription https://example.com/path/to/sub docker pull caddy
 > docker.io/library/caddy:latest
 > ```
 
-Select the node manually:
+你也可以手动选择节点：
 
 ```bash
 gg --subscription https://example.com/path/to/sub --select curl ipv4.appspot.com
@@ -149,11 +144,11 @@ gg --subscription https://example.com/path/to/sub --select curl ipv4.appspot.com
 > 13.141.150.163
 > ```
 
-### Long-term use
+### 长期使用
 
-Write a config variable with `-w`:
+你可以使用 `-w` 来写入配置项：
 
-Set subscription:
+设置订阅地址：
 
 ```bash
 gg config -w subscription=https://example.com/path/to/sub
@@ -164,7 +159,7 @@ gg curl ipv4.appspot.com
 > 13.141.150.163
 > ```
 
-Set node:
+设置节点链接:
 
 ```bash
 gg config -w node=vmess://MY_VMESS_SERVER_SHARE_LINK
@@ -175,7 +170,7 @@ gg curl ipv4.appspot.com
 > 53.141.112.10
 > ```
 
-List config variables:
+列出所有配置项:
 
 ```bash
 gg config
@@ -191,7 +186,7 @@ gg config
 > test_node_before_use=true
 > ```
 
-Read specific config variable:
+读取某个特定配置项:
 
 ```bash
 gg config node
@@ -201,16 +196,16 @@ gg config node
 > vmess://MY_VMESS_SERVER_SHARE_LINK
 > ```
 
-## Support List
+## 支持列表
 
-### OS/Arch
+### 操作系统/架构
 
 - [x] Linux/amd64
-- [x] Linux/386 (not tested)
-- [ ] Linux/arm64 (may have some problem)
-- [x] Linux/arm (not tested)
+- [x] Linux/386 （尚未测试）
+- [ ] Linux/arm64 （也许有一些问题）
+- [x] Linux/arm （尚未测试）
 
-### Protocol
+### 协议类型
 
 - [x] HTTP(S)
 - [x] Socks5
@@ -228,7 +223,7 @@ gg config node
     - [x] Trojan-gfw
     - [x] Trojan-go
 
-### Subscription
+### 订阅类型
 
 - [x] base64 (v2rayN, etc.)
 - [ ] SIP008
@@ -236,8 +231,3 @@ gg config node
 - [ ] surge
 - [ ] Quantumult
 - [ ] Quantumult X
-
-## TODO
-
-1. Use system DNS as the fallback.
-2. Restore the IP of connect that family is AF_LINKLAYER and others.
