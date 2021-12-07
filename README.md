@@ -175,19 +175,20 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 
 ### Protocol
 
-- [x] VMess (AEAD)
+- [x] VMess (AEAD, alterID=0)
     - [x] tcp
-    - [ ] ws
-    - [ ] tls
-- [ ] VLESS
+    - [x] ws
+    - [x] tls
+    - [ ] grpc
 - [x] Shadowsocks
     - [x] AEAD Ciphers
     - [x] Simple-Obfs (not tested)
     - [ ] Stream Ciphers
-- [ ] ShadowsocksR
 - [x] Trojan
     - [x] Trojan-GFW
     - [ ] Trojan-go
+- [ ] VLESS
+- [ ] ShadowsocksR
 - [ ] HTTP(S)
 - [ ] Socks5
 

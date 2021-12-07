@@ -31,12 +31,6 @@ func NewTls(s string, d proxy.Dialer) (*Tls, error) {
 
 	query := u.Query()
 	t.serverName = query.Get("sni")
-	if t.serverName == "" {
-		t.serverName = query.Get("host")
-	}
-	if t.serverName == "" {
-		t.serverName = u.Hostname()
-	}
 
 	// skipVerify
 	if query.Get("allowInsecure") == "true" || query.Get("allowInsecure") == "1" ||

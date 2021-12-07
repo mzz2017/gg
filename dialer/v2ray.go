@@ -5,6 +5,8 @@ import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mzz2017/gg/common"
+	"github.com/mzz2017/gg/dialer/transport/tls"
+	"github.com/mzz2017/gg/dialer/transport/ws"
 	"golang.org/x/net/proxy"
 	"net"
 	"net/url"
@@ -42,17 +44,59 @@ func NewV2Ray(link string) (*Dialer, error) {
 		if err != nil {
 			return nil, err
 		}
-		if s.Net != "tcp" {
-			return nil, fmt.Errorf("%w: network: %v", UnexpectedFieldErr, s.Net)
-		}
-		if s.Type != "none" && s.Type != "" {
-			return nil, fmt.Errorf("%w: type: %v", UnexpectedFieldErr, s.Type)
-		}
 		if s.Aid != "0" && s.Aid != "" {
 			return nil, fmt.Errorf("%w: aid: %v, we only support AEAD encryption", UnexpectedFieldErr, s.Aid)
 		}
+		var dialer proxy.Dialer = proxy.Direct
+		switch strings.ToLower(s.Net) {
+		case "ws":
+			scheme := "ws"
+			if s.TLS == "tls" || s.TLS == "xtls" {
+				scheme = "wss"
+			}
+			sni := s.SNI
+			if sni == "" {
+				sni = s.Host
+			}
+			u := url.URL{
+				Scheme: scheme,
+				Host:   net.JoinHostPort(s.Add, s.Port),
+				Path:   s.Path,
+				RawQuery: url.Values{
+					"host": []string{s.Host},
+					"sni":  []string{sni},
+				}.Encode(),
+			}
+			dialer, err = ws.NewWs(u.String(), dialer)
+			if err != nil {
+				return nil, err
+			}
+		case "tcp":
+			if s.TLS == "tls" || s.TLS == "xtls" {
+				sni := s.SNI
+				if sni == "" {
+					sni = s.Host
+				}
+				u := url.URL{
+					Scheme: "tls",
+					Host:   net.JoinHostPort(s.Add, s.Port),
+					RawQuery: url.Values{
+						"sni": []string{sni},
+					}.Encode(),
+				}
+				dialer, err = tls.NewTls(u.String(), dialer)
+				if err != nil {
+					return nil, err
+				}
+			}
+			if s.Type != "none" && s.Type != "" {
+				return nil, fmt.Errorf("%w: type: %v", UnexpectedFieldErr, s.Type)
+			}
+		default:
+			return nil, fmt.Errorf("%w: network: %v", UnexpectedFieldErr, s.Net)
+		}
 
-		dialer, err := protocol.NewDialer("vmess", proxy.Direct, protocol.Header{
+		dialer, err = protocol.NewDialer("vmess", dialer, protocol.Header{
 			ProxyAddress: net.JoinHostPort(s.Add, s.Port),
 			Cipher:       "aes-128-gcm",
 			Password:     s.ID,

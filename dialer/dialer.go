@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+var (
+	ConnectivityTestFailedErr = fmt.Errorf("connectivity test failed")
+	UnexpectedFieldErr        = fmt.Errorf("unexpected field")
+	InvalidParameterErr       = fmt.Errorf("invalid parameters")
+)
+
 type Dialer struct {
 	proxy.Dialer
 	supportUDP bool
@@ -25,7 +31,6 @@ func (d *Dialer) Name() string {
 	return d.name
 }
 
-
 func (d *Dialer) Link() string {
 	return d.link
 }
@@ -40,7 +45,7 @@ func (d *Dialer) Test(ctx context.Context) (bool, error) {
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://gstatic.com/generate_204", nil)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("%w: %v", ConnectivityTestFailedErr, err)
 	}
 	resp, err := cli.Do(req)
 	if err != nil {
@@ -48,16 +53,11 @@ func (d *Dialer) Test(ctx context.Context) (bool, error) {
 		if errors.As(err, &netErr); netErr.Timeout() {
 			err = fmt.Errorf("timeout")
 		}
-		return false, err
+		return false, fmt.Errorf("%w: %v", ConnectivityTestFailedErr, err)
 	}
 	defer resp.Body.Close()
 	return resp.StatusCode == 204, nil
 }
-
-var (
-	UnexpectedFieldErr  = fmt.Errorf("unexpected field")
-	InvalidParameterErr = fmt.Errorf("invalid parameters")
-)
 
 type FromLinkCreator func(link string) (dialer *Dialer, err error)
 
@@ -84,6 +84,7 @@ func (d *ContextDialer) DialContext(ctx context.Context, network, addr string) (
 	go func() {
 		c, err = d.Dialer.Dial(network, addr)
 		if err != nil {
+			close(done)
 			return
 		}
 		select {
