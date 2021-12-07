@@ -6,7 +6,7 @@
 
 gg 是一个命令行工具，可在 Linux 环境下对任意命令进行一键代理，而无需安装 v2ray 等其他工具。
 
-你只需要在想代理的命令之前添加 `gg` 即可，例如: `sudo gg apt-get install -y nvidia-docker2`.
+你只需要在想代理的命令之前添加 `gg` 即可，例如: `gg python -m pip install torch`.
 
 感谢 [graftcp](https://github.com/hmgle/graftcp) 带来的灵感，gg 是它的一个纯 Go 语言实现，并且拥有更多的有用特性。
 
