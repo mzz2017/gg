@@ -15,7 +15,7 @@ import (
 	"sync"
 )
 
-var UnableToConnectErr = fmt.Errorf("unable to connect the proxy node")
+var UnableToConnectErr = fmt.Errorf("unable to connect to the proxy node")
 
 func GetDialer(log *logrus.Logger) (d *dialer.Dialer, err error) {
 	nodeLink := config.ParamsObj.Node

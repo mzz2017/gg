@@ -39,81 +39,91 @@ type V2Ray struct {
 }
 
 func NewV2Ray(link string) (*Dialer, error) {
-	if strings.HasPrefix(link, "vmess://") {
-		s, err := ParseVmessURL(link)
+	var (
+		dialer proxy.Dialer = proxy.Direct
+		s      *V2Ray
+		err    error
+	)
+	switch {
+	case strings.HasPrefix(link, "vmess://"):
+		s, err = ParseVmessURL(link)
 		if err != nil {
 			return nil, err
 		}
 		if s.Aid != "0" && s.Aid != "" {
 			return nil, fmt.Errorf("%w: aid: %v, we only support AEAD encryption", UnexpectedFieldErr, s.Aid)
 		}
-		var dialer proxy.Dialer = proxy.Direct
-		switch strings.ToLower(s.Net) {
-		case "ws":
-			scheme := "ws"
-			if s.TLS == "tls" || s.TLS == "xtls" {
-				scheme = "wss"
-			}
+	case strings.HasPrefix(link, "vless://"):
+		s, err = ParseVlessURL(link)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, InvalidParameterErr
+	}
+
+	switch strings.ToLower(s.Net) {
+	case "ws":
+		scheme := "ws"
+		if s.TLS == "tls" || s.TLS == "xtls" {
+			scheme = "wss"
+		}
+		sni := s.SNI
+		if sni == "" {
+			sni = s.Host
+		}
+		u := url.URL{
+			Scheme: scheme,
+			Host:   net.JoinHostPort(s.Add, s.Port),
+			Path:   s.Path,
+			RawQuery: url.Values{
+				"host": []string{s.Host},
+				"sni":  []string{sni},
+			}.Encode(),
+		}
+		dialer, err = ws.NewWs(u.String(), dialer)
+		if err != nil {
+			return nil, err
+		}
+	case "tcp":
+		if s.TLS == "tls" || s.TLS == "xtls" {
 			sni := s.SNI
 			if sni == "" {
 				sni = s.Host
 			}
 			u := url.URL{
-				Scheme: scheme,
+				Scheme: "tls",
 				Host:   net.JoinHostPort(s.Add, s.Port),
-				Path:   s.Path,
 				RawQuery: url.Values{
-					"host": []string{s.Host},
-					"sni":  []string{sni},
+					"sni": []string{sni},
 				}.Encode(),
 			}
-			dialer, err = ws.NewWs(u.String(), dialer)
+			dialer, err = tls.NewTls(u.String(), dialer)
 			if err != nil {
 				return nil, err
 			}
-		case "tcp":
-			if s.TLS == "tls" || s.TLS == "xtls" {
-				sni := s.SNI
-				if sni == "" {
-					sni = s.Host
-				}
-				u := url.URL{
-					Scheme: "tls",
-					Host:   net.JoinHostPort(s.Add, s.Port),
-					RawQuery: url.Values{
-						"sni": []string{sni},
-					}.Encode(),
-				}
-				dialer, err = tls.NewTls(u.String(), dialer)
-				if err != nil {
-					return nil, err
-				}
-			}
-			if s.Type != "none" && s.Type != "" {
-				return nil, fmt.Errorf("%w: type: %v", UnexpectedFieldErr, s.Type)
-			}
-		default:
-			return nil, fmt.Errorf("%w: network: %v", UnexpectedFieldErr, s.Net)
 		}
-
-		dialer, err = protocol.NewDialer("vmess", dialer, protocol.Header{
-			ProxyAddress: net.JoinHostPort(s.Add, s.Port),
-			Cipher:       "aes-128-gcm",
-			Password:     s.ID,
-			IsClient:     true,
-		})
-		return &Dialer{
-			Dialer:     dialer,
-			supportUDP: true,
-			name:       s.Ps,
-			link:       link,
-		}, nil
-	} else if strings.HasPrefix(link, "vless://") {
-		//s, err = ParseVlessURL(link)
-		return nil, fmt.Errorf("%w: vless", UnexpectedFieldErr)
-	} else {
-		return nil, InvalidParameterErr
+		if s.Type != "none" && s.Type != "" {
+			return nil, fmt.Errorf("%w: type: %v", UnexpectedFieldErr, s.Type)
+		}
+	default:
+		return nil, fmt.Errorf("%w: network: %v", UnexpectedFieldErr, s.Net)
 	}
+
+	if dialer, err = protocol.NewDialer(s.Protocol, dialer, protocol.Header{
+		ProxyAddress: net.JoinHostPort(s.Add, s.Port),
+		Cipher:       "aes-128-gcm",
+		Password:     s.ID,
+		IsClient:     true,
+	}); err != nil {
+		return nil, err
+	}
+	return &Dialer{
+		Dialer:     dialer,
+		supportUDP: true,
+		name:       s.Ps,
+		link:       link,
+	}, nil
 }
 
 func ParseVlessURL(vless string) (data *V2Ray, err error) {
