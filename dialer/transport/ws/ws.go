@@ -45,7 +45,7 @@ func NewWs(s string, d proxy.Dialer) (*Ws, error) {
 	t.wsAddr = wsUrl.String()
 	t.wsDialer = &websocket.Dialer{
 		NetDial:      d.Dial,
-		Subprotocols: []string{"binary"},
+		//Subprotocols: []string{"binary"},
 	}
 	if u.Scheme == "wss" {
 		if u.Query().Get("sni") != "" {
