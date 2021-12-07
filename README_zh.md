@@ -77,10 +77,10 @@ gg git clone --depth=1 https://github.com/torvalds/linux.git
 
 ### 临时使用
 
-**使用分享链接**
+**使用节点的分享链接**
 
 ```bash
-# 如果你之前没有写过配置项，将会提示你输入订阅链接。
+# 如果你之前没有写过配置项，将会提示你输入节点链接。
 gg wget -O frp.tar.gz https://github.com/fatedier/frp/releases/download/v0.38.0/frp_0.38.0_linux_amd64.tar.gz
 ```
 
