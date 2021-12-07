@@ -88,4 +88,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ./gg-${{ steps.get_filename.outputs.ASSET_NAME }}*
+          overwrite: true
           tag: ${{ github.ref }}
