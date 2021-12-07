@@ -3,9 +3,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"github.com/pelletier/go-toml"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/config"
+	"github.com/pelletier/go-toml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,8 +47,13 @@ var (
 For example:
 gg config -w no_udp=true`)
 			}
-
-			if err := config.SetValueHierarchicalMap(m, completeKey(fields[0]), fields[1]); err != nil {
+			// make sure it is valid
+			key := completeKey(fields[0])
+			val := fields[1]
+			if err := config.SetValueHierarchicalStruct(&config.Params{}, key, val); err != nil {
+				logrus.Fatalln(err)
+			}
+			if err := config.SetValueHierarchicalMap(m, key, val); err != nil {
 				logrus.Fatalln(err)
 			}
 			if err := WriteConfig(m, configPath); err != nil {

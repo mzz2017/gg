@@ -8,6 +8,7 @@ import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pkg/log"
 	"github.com/spf13/viper"
 	"reflect"
+	"strconv"
 	"strings"
 	"text/template"
 )
@@ -149,4 +150,106 @@ func SetValueHierarchicalMap(m map[string]interface{}, key string, val interface
 	}
 	(*p)[lastKey] = val
 	return nil
+}
+
+func SetValueHierarchicalStruct(m interface{}, key string, val string) error {
+	keys := strings.Split(key, ".")
+	ifv := reflect.Indirect(reflect.ValueOf(m))
+	ift := ifv.Type()
+	for _, key := range keys {
+		found := false
+		for i := 0; i < ifv.NumField(); i++ {
+			name, ok := ift.Field(i).Tag.Lookup("mapstructure")
+			if ok && name == key {
+				found = true
+				ifv = ifv.Field(i)
+				ift = ifv.Type()
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("unexpected key: %v", key)
+		}
+	}
+	if !FuzzyDecode(ifv.Addr().Interface(), val) {
+		return fmt.Errorf("type does not match: type \"%v\" and value \"%v\"", ifv.Kind(), val)
+	}
+	return nil
+}
+
+func FuzzyDecode(to interface{}, val string) bool {
+	v := reflect.Indirect(reflect.ValueOf(to))
+	switch v.Kind() {
+	case reflect.Int:
+		i, err := strconv.ParseInt(val, 10, strconv.IntSize)
+		if err != nil {
+			return false
+		}
+		v.SetInt(i)
+	case reflect.Int8:
+		i, err := strconv.ParseInt(val, 10, 8)
+		if err != nil {
+			return false
+		}
+		v.SetInt(i)
+	case reflect.Int16:
+		i, err := strconv.ParseInt(val, 10, 16)
+		if err != nil {
+			return false
+		}
+		v.SetInt(i)
+	case reflect.Int32:
+		i, err := strconv.ParseInt(val, 10, 32)
+		if err != nil {
+			return false
+		}
+		v.SetInt(i)
+	case reflect.Int64:
+		i, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			return false
+		}
+		v.SetInt(i)
+	case reflect.Uint:
+		i, err := strconv.ParseUint(val, 10, strconv.IntSize)
+		if err != nil {
+			return false
+		}
+		v.SetUint(i)
+	case reflect.Uint8:
+		i, err := strconv.ParseUint(val, 10, 8)
+		if err != nil {
+			return false
+		}
+		v.SetUint(i)
+	case reflect.Uint16:
+		i, err := strconv.ParseUint(val, 10, 16)
+		if err != nil {
+			return false
+		}
+		v.SetUint(i)
+	case reflect.Uint32:
+		i, err := strconv.ParseUint(val, 10, 32)
+		if err != nil {
+			return false
+		}
+		v.SetUint(i)
+	case reflect.Uint64:
+		i, err := strconv.ParseUint(val, 10, 64)
+		if err != nil {
+			return false
+		}
+		v.SetUint(i)
+	case reflect.Bool:
+		if val == "true" || val == "1" {
+			v.SetBool(true)
+		} else if val == "false" || val == "0" {
+			v.SetBool(false)
+		} else {
+			return false
+		}
+	case reflect.String:
+		v.SetString(val)
+	}
+	return true
 }

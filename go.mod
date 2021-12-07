@@ -8,7 +8,6 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/json-iterator/go v1.1.12
-	github.com/nadoo/glider v0.15.0
 	github.com/pelletier/go-toml v1.9.4
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
@@ -75,9 +74,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => ../BitterJohn
+//replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => ../BitterJohn
 
-//replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211207092356-10720cd526d0
+replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211207092356-10720cd526d0
 
 replace (
 	github.com/spf13/cobra => github.com/mzz2017/cobra v0.0.0-20211205075040-2b7f80d9e0b4
