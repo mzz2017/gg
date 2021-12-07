@@ -223,6 +223,12 @@ gg config node
     - [x] Trojan-gfw
     - [x] Trojan-go
 
+
+## Q&A
+
+1. Q: 当我使用 `sudo gg xxx` 时，尽管我已经设置了配置项，它还是每次都要求我都输入分享链接。怎样解决这个问题？
+   A: 使用 `sudo -E gg xxx` 即可.
+
 ### 订阅类型
 
 - [x] base64 (v2rayN, etc.)

@@ -234,7 +234,7 @@ func (t *Tracer) checkSocket(pid int, fd uint64) (socketInfo *SocketMetadata, ex
 	}
 	return socketInfo, true
 }
-func (t *Tracer) port(socketInfo *SocketMetadata) int {
+func (t *Tracer) portHackTo(socketInfo *SocketMetadata) int {
 	switch {
 	case socketInfo.Type&syscall.SOCK_STREAM == syscall.SOCK_STREAM:
 		return t.proxy.TCPPort()
@@ -258,7 +258,7 @@ func (t *Tracer) network(socketInfo *SocketMetadata) string {
 
 func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sockAddrToPock []byte, err error) {
 	network := t.network(socketInfo)
-	portSentTo := t.port(socketInfo)
+	portHackTo := t.portHackTo(socketInfo)
 	addr := *(*RawSockaddrInet4)(unsafe.Pointer(&bSockAddr[0]))
 	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() && binary.BigEndian.Uint16(addr.Port[:]) != 53 {
 		// skip loopback
@@ -280,7 +280,7 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	}
 	loopback := t.proxy.AllocProjection(originAddr)
 	addr.Addr = loopback.As4()
-	binary.BigEndian.PutUint16(addr.Port[:], uint16(portSentTo))
+	binary.BigEndian.PutUint16(addr.Port[:], uint16(portHackTo))
 	//logrus.Traceln("port", addr.Port)
 	_bSockAddrToPock := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
 		Data: uintptr(unsafe.Pointer(&addr)),
@@ -289,13 +289,13 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	}))
 	bSockAddrToPock := make([]byte, len(_bSockAddrToPock))
 	copy(bSockAddrToPock, _bSockAddrToPock)
-	t.log.Tracef("handleINet4 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(loopback.String(), strconv.Itoa(portSentTo)))
+	t.log.Tracef("handleINet4 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(loopback.String(), strconv.Itoa(portHackTo)))
 	return bSockAddrToPock, nil
 }
 
 func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sockAddrToPock []byte, err error) {
 	network := t.network(socketInfo)
-	portSentTo := t.port(socketInfo)
+	portHackTo := t.portHackTo(socketInfo)
 
 	addr := *(*RawSockaddrInet6)(unsafe.Pointer(&bSockAddr[0]))
 	ip := netaddr.IPFrom16(addr.Addr)
@@ -325,13 +325,13 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		return nil, err
 	}
 	addr.Addr = ipv4MappedIPv6.As16()
-	binary.BigEndian.PutUint16(addr.Port[:], uint16(portSentTo))
+	binary.BigEndian.PutUint16(addr.Port[:], uint16(portHackTo))
 	_bSockAddrToPock := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
 		Data: uintptr(unsafe.Pointer(&addr)),
 		Cap:  binary.Size(addr),
 		Len:  binary.Size(addr),
 	}))
-	t.log.Tracef("handleINet6 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(ipv4MappedIPv6.String(), strconv.Itoa(portSentTo)))
+	t.log.Tracef("handleINet6 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(ipv4MappedIPv6.String(), strconv.Itoa(portHackTo)))
 	bSockAddrToPock := make([]byte, len(_bSockAddrToPock))
 	copy(bSockAddrToPock, _bSockAddrToPock)
 	return bSockAddrToPock, nil
