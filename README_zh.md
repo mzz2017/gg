@@ -202,8 +202,8 @@ gg config node
 
 - [x] Linux/amd64
 - [x] Linux/arm（但未测试）
+- [x] Linux/arm64（但未测试）
 - [ ] Linux/386
-- [ ] Linux/arm64
 
 ### 协议类型
 

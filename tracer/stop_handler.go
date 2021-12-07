@@ -14,26 +14,30 @@ import (
 )
 
 func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
-	// FIXME: arm64 will overwrite the args[0] at exit-stop
-	switch Inst(regs) {
+	inst := Inst(regs)
+	v, ok := t.storehouse.Get(pid, inst)
+	if !ok {
+		return fmt.Errorf("cannot get the arguments from storehouse because of neverseen: pid: %v, inst: %v", pid, inst)
+	}
+	t.storehouse.Remove(pid, inst)
+	args := v.([]uint64)
+	switch inst {
 	case syscall.SYS_SOCKET:
 		fd, errno := ReturnValueInt(regs)
 		if errno != 0 {
 			logrus.Tracef("socket error: pid: %v, errno: %v", pid, errno)
 			return nil
 		}
-		args := Arguments(regs)
 		socketInfo := SocketMetadata{
 			Family: int(args[0]),
 			// FIXME: This field may be not so exact. To reproduce: curl -v example.com
 			// 		So the compromise is that TCP and UDP ports to listen at must be the same.
-			Type:   int(args[1]),
+			Type: int(args[1]),
 		}
 		t.saveSocketInfo(pid, fd, socketInfo)
 		t.log.Tracef("new socket (%v): pid: %v, fd %v", t.network(&socketInfo), pid, fd)
 	case syscall.SYS_FCNTL:
 		// syscall.SYS_FCNTL can be used to duplicate the file descriptor.
-		args := Arguments(regs)
 		switch args[1] {
 		case syscall.F_DUPFD, syscall.F_DUPFD_CLOEXEC:
 		default:
@@ -61,10 +65,11 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 }
 
 func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
-	//logrus.Println(regs.Orig_rax)
-	switch Inst(regs) {
+	inst := Inst(regs)
+	args := Arguments(regs)
+	t.storehouse.Save(pid, inst, args)
+	switch inst {
 	case syscall.SYS_CONNECT, syscall.SYS_SENDTO:
-		args := Arguments(regs)
 		fd := args[0]
 		t.log.Tracef("syscall.SYS_CONNECT: pid: %v, fd: %v", pid, fd)
 		socketInfo, ok := t.checkSocket(pid, fd)
@@ -126,7 +131,6 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			}
 		}
 	case syscall.SYS_SENDMSG:
-		args := Arguments(regs)
 		fd := args[0]
 		t.log.Tracef("syscall.SYS_SENDMSG: pid: %v, fd: %v", pid, fd)
 		socketInfo, ok := t.checkSocket(pid, fd)

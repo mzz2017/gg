@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 	"inet.af/netaddr"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -80,7 +81,7 @@ func (p *Proxy) hijackDNS(data []byte) (resp []byte, isDNSQuery bool) {
 	var strAns string
 	switch q.Type {
 	case dnsmessage.TypeAAAA:
-		ans, _ := netaddr.ParseIP("::ffff:" + p.AllocProjection(q.Name.String()).String())
+		ans, _ := netaddr.ParseIP("::ffff:" + p.AllocProjection(strings.TrimSuffix(q.Name.String(), ".")).String())
 		strAns = ans.String()
 		dmsg.Answers = []dnsmessage.Resource{{
 			Header: dnsmessage.ResourceHeader{
@@ -91,7 +92,7 @@ func (p *Proxy) hijackDNS(data []byte) (resp []byte, isDNSQuery bool) {
 			Body: &dnsmessage.AAAAResource{AAAA: ans.As16()},
 		}}
 	case dnsmessage.TypeA:
-		ans := p.AllocProjection(q.Name.String())
+		ans := p.AllocProjection(strings.TrimSuffix(q.Name.String(), "."))
 		strAns = ans.String()
 		dmsg.Answers = []dnsmessage.Resource{{
 			Header: dnsmessage.ResourceHeader{

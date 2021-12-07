@@ -207,8 +207,8 @@ gg config node
 
 - [x] Linux/amd64
 - [x] Linux/arm (not tested)
+- [x] Linux/arm64 (not tested)
 - [ ] Linux/386
-- [ ] Linux/arm64
 
 ### Protocol
 

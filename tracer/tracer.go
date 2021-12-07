@@ -22,6 +22,7 @@ type Tracer struct {
 	log        *logrus.Logger
 	proxy      *proxy.Proxy
 	mainPID    int
+	storehouse Storehouse
 	socketInfo map[int]map[int]SocketMetadata
 	closed     chan struct{}
 	exitCode   int
@@ -33,6 +34,7 @@ func New(name string, argv []string, attr *os.ProcAttr, dialer proxy2.Dialer, ig
 		log:        logger,
 		proxy:      proxy.New(logger, dialer),
 		socketInfo: make(map[int]map[int]SocketMetadata),
+		storehouse: MakeStorehouse(),
 		closed:     make(chan struct{}),
 		ignoreUDP:  ignoreUDP,
 	}
