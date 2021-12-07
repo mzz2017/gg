@@ -81,16 +81,7 @@ func (p *Proxy) hijackDNS(data []byte) (resp []byte, isDNSQuery bool) {
 	var strAns string
 	switch q.Type {
 	case dnsmessage.TypeAAAA:
-		ans, _ := netaddr.ParseIP("::ffff:" + p.AllocProjection(strings.TrimSuffix(q.Name.String(), ".")).String())
-		strAns = ans.String()
-		dmsg.Answers = []dnsmessage.Resource{{
-			Header: dnsmessage.ResourceHeader{
-				Name:  q.Name,
-				Class: q.Class,
-				TTL:   10,
-			},
-			Body: &dnsmessage.AAAAResource{AAAA: ans.As16()},
-		}}
+		p.AllocProjection(strings.TrimSuffix(q.Name.String(), "."))
 	case dnsmessage.TypeA:
 		ans := p.AllocProjection(strings.TrimSuffix(q.Name.String(), "."))
 		strAns = ans.String()
