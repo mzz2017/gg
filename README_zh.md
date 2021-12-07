@@ -196,6 +196,12 @@ gg config node
 > vmess://MY_VMESS_SERVER_SHARE_LINK
 > ```
 
+## 问与答
+
+1. Q: 当我使用 `sudo gg xxx` 时，尽管我已经设置了配置项，它还是每次都要求我都输入分享链接。怎样解决这个问题？
+
+   A: 使用 `sudo -E gg xxx` 即可。
+
 ## 支持列表
 
 ### 操作系统/架构
@@ -222,13 +228,6 @@ gg config node
 - [x] Trojan
     - [x] Trojan-gfw
     - [x] Trojan-go
-
-
-## 问与答
-
-1. Q: 当我使用 `sudo gg xxx` 时，尽管我已经设置了配置项，它还是每次都要求我都输入分享链接。怎样解决这个问题？
-
-   A: 使用 `sudo -E gg xxx` 即可.
 
 ### 订阅类型
 
