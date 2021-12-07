@@ -175,6 +175,8 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 
 ### Protocol
 
+- [x] HTTP(S)
+- [x] Socks5
 - [x] VMess(AEAD, alterID=0) / VLESS
     - [x] tcp
     - [x] ws
@@ -188,8 +190,6 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
 - [x] Trojan
     - [x] Trojan-gfw
     - [x] Trojan-go
-- [ ] HTTP(S)
-- [ ] Socks5
 
 ### Subscription
 

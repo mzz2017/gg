@@ -1,17 +1,16 @@
 package dialer
 
 import (
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/http"
-	"golang.org/x/net/proxy"
+	"github.com/txthinking/socks5"
 	"net/url"
 )
 
 func init() {
-	FromLinkRegister("http", NewHTTP)
-	FromLinkRegister("https", NewHTTP)
+	FromLinkRegister("socks", NewSocks5)
+	FromLinkRegister("socks5", NewSocks5)
 }
 
-type HTTP struct {
+type Socks5 struct {
 	Name     string `json:"name"`
 	Server   string `json:"server"`
 	Port     int    `json:"port"`
@@ -20,19 +19,19 @@ type HTTP struct {
 	Protocol string `json:"protocol"`
 }
 
-func NewHTTP(link string) (*Dialer, error) {
+func NewSocks5(link string) (*Dialer, error) {
 	u, err := url.Parse(link)
 	if err != nil {
 		return nil, InvalidParameterErr
 	}
-
-	dialer, err := http.NewHTTPProxy(u, proxy.Direct)
+	pwd, _ := u.User.Password()
+	dialer, err := socks5.NewClient(u.Host, u.User.Username(), pwd, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 	return &Dialer{
 		Dialer:     dialer,
-		supportUDP: false,
+		supportUDP: true,
 		name:       u.Fragment,
 		link:       link,
 	}, nil
