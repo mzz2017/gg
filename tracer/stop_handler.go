@@ -25,6 +25,8 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		args := Arguments(regs)
 		socketInfo := SocketMetadata{
 			Family: int(args[0]),
+			// FIXME: This field may be not so exact. To reproduce: curl -v example.com
+			// 		So the compromise is that TCP and UDP ports to listen at must be the same.
 			Type:   int(args[1]),
 		}
 		t.saveSocketInfo(pid, fd, socketInfo)

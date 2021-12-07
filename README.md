@@ -182,10 +182,10 @@ vmess://MY_VMESS_SERVER_SHARE_LINK
     - [ ] grpc
 - [x] Shadowsocks
     - [x] AEAD Ciphers
-    - [x] Simple-Obfs (not tested)
+    - [x] Simple-obfs (not tested)
     - [ ] Stream Ciphers
 - [x] Trojan
-    - [x] Trojan-GFW
+    - [x] Trojan-gfw
     - [ ] Trojan-go
 - [ ] VLESS
 - [ ] ShadowsocksR
