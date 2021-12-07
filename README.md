@@ -204,6 +204,7 @@ gg config node
 ## Q&A
 
 1. Q: When I use `sudo gg xxx`, it remains to ask me for share-link even though config has been set. How to solve it?
+
    A: Use `sudo -E gg xxx` to solve it.
 
 ## Support List
