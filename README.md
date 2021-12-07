@@ -2,8 +2,7 @@
 
 gg is a command-line tool for one-click proxy in your research and development.
 
-You can just add `gg` before another command to redirect its traffic to your proxy without installing any other
-programs like: `sudo gg apt-get install -y nvidia-docker2`.
+You can just add `gg` before another command to redirect its traffic to your proxy without installing v2ray or anything else. Usage example: `sudo gg apt-get install -y nvidia-docker2`.
 
 gg, was inspired by [graftcp](https://github.com/hmgle/graftcp), is a pure golang implementation with more useful
 features.
