@@ -201,9 +201,9 @@ gg config node
 > vmess://MY_VMESS_SERVER_SHARE_LINK
 > ```
 
-## 问与答
+## Q&A
 
-1. Q: When I use `sudo gg xxx`, it remains to ask me for share-link nevertheless config has been set. How to solve it?
+1. Q: When I use `sudo gg xxx`, it remains to ask me for share-link even though config has been set. How to solve it?
    A: Use `sudo -E gg xxx` to solve it.
 
 ## Support List
