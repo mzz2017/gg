@@ -45,7 +45,7 @@ func (d *Dialer) Test(ctx context.Context) (bool, error) {
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://fonts.gstatic.com/generate_204", nil)
 	if err != nil {
-		return false, fmt.Errorf("%w: %v", ConnectivityTestFailedErr, err)
+		return false, fmt.Errorf("%v: %w", ConnectivityTestFailedErr, err)
 	}
 	resp, err := cli.Do(req)
 	if err != nil {
@@ -53,7 +53,7 @@ func (d *Dialer) Test(ctx context.Context) (bool, error) {
 		if errors.As(err, &netErr); netErr.Timeout() {
 			err = fmt.Errorf("timeout")
 		}
-		return false, fmt.Errorf("%w: %v", ConnectivityTestFailedErr, err)
+		return false, fmt.Errorf("%v: %w", ConnectivityTestFailedErr, err)
 	}
 	defer resp.Body.Close()
 	return resp.StatusCode == 204, nil

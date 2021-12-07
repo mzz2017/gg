@@ -34,17 +34,17 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			// validate command and get the fullPath from $PATH
 			fullPath, err := exec.LookPath(args[0])
 			if err != nil {
-				logrus.Fatal(err)
+				logrus.Fatal("exec.LookPath:", err)
 			}
 			// get dialer
 			dialer, err := GetDialer(log)
 			if err != nil {
-				logrus.Fatal(err)
+				logrus.Fatal("GetDialer:", err)
 			}
 
 			noUDP, err := cmd.Flags().GetBool("noudp")
 			if err != nil {
-				logrus.Fatal(err)
+				logrus.Fatal("GetBool(noudp):", err)
 			}
 			if !noUDP && !dialer.SupportUDP() {
 				log.Warn("Your proxy server does not support UDP, so we will not redirect UDP traffic.")
@@ -52,7 +52,7 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			}
 			preserveEnv, err := cmd.Flags().GetBool("preserve-env")
 			if err != nil {
-				logrus.Fatal(err)
+				logrus.Fatal("GetBool(preserve-env):", err)
 			}
 			var env []string
 			if preserveEnv {
@@ -67,11 +67,11 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 				log,
 			)
 			if err != nil {
-				logrus.Fatal(err)
+				logrus.Fatal("tracer.New:", err)
 			}
 			code, err := t.Wait()
 			if err != nil {
-				logrus.Fatal(err)
+				logrus.Fatal("tracer.Wait:", err)
 			}
 			os.Exit(code)
 		},
