@@ -43,7 +43,7 @@ func (d *Dialer) Test(ctx context.Context) (bool, error) {
 		},
 		Timeout: 5 * time.Second,
 	}
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://gstatic.com/generate_204", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://fonts.gstatic.com/generate_204", nil)
 	if err != nil {
 		return false, fmt.Errorf("%w: %v", ConnectivityTestFailedErr, err)
 	}
