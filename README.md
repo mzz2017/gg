@@ -206,9 +206,9 @@ gg config node
 ### OS/Arch
 
 - [x] Linux/amd64
-- [x] Linux/386 (not tested)
-- [ ] Linux/arm64 (may have some problem)
 - [x] Linux/arm (not tested)
+- [ ] Linux/386
+- [ ] Linux/arm64
 
 ### Protocol
 

@@ -201,9 +201,9 @@ gg config node
 ### 操作系统/架构
 
 - [x] Linux/amd64
-- [x] Linux/386 （尚未测试）
-- [ ] Linux/arm64 （也许有一些问题）
-- [x] Linux/arm （尚未测试）
+- [x] Linux/arm（但未测试）
+- [ ] Linux/386
+- [ ] Linux/arm64
 
 ### 协议类型
 
