@@ -1,8 +1,8 @@
+# gg (go-graft)
+
 | [English](README.md)     |
 | ------------------------ |
 | [中文简体](README_zh.md) |
-
-# gg (go-graft)
 
 gg is a command-line tool for one-click proxy in your research and development.
 
