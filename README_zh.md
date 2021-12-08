@@ -29,10 +29,9 @@ gg 是一个命令行工具，可在 Linux 环境下对任意命令进行一键�
 1. 运行如下命令下载安装 go-graft 最新的版本：
 
     ```bash
-    # sudo curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
-    # 使用镜像以加速:
-    sudo curl -L "https://hubmirror.v2raya.org/mzz2017/gg/releases/latest/download/gg-$(uname -s)-$(uname -m)" -o /usr/local/bin/gg
-    sudo chmod +x /usr/local/bin/gg
+    # sudo curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh | sudo bash
+    # 使用镜像以加速：
+    sudo curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh | sudo bash
     ```
 
    > 如果安装完毕后 gg 命令运行 `失败`，请检查 `$PATH`.
