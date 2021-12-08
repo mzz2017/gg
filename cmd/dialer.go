@@ -1,16 +1,15 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/1lann/promptui"
 	"github.com/mzz2017/gg/config"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 )
@@ -56,9 +55,11 @@ func GetDialerFromLink(nodeLink string, testNode bool) (d *dialer.Dialer, err er
 }
 
 func GetDialerFromInput(testNode bool) (d *dialer.Dialer, err error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter the share-link of your proxy: ")
-	link, err := reader.ReadString('\n')
+	prompt := promptui.Prompt{
+		Label:       "Enter the share-link of your proxy",
+		HideEntered: true,
+	}
+	link, err := prompt.Run()
 	if err != nil {
 		return nil, err
 	}
