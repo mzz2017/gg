@@ -36,7 +36,7 @@ Compared to proxychains or graftcp, we have the following advantages:
     ```bash
     # curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh | sudo bash
     # use the mirror:
-    curl -L https://hubmirror.v2raya.org/mzz2017/gg/raw/main/release/go.sh | sudo bash
+    curl -L https://hubmirror.v2raya.org/raw/mzz2017/gg/main/release/go.sh | sudo bash
     ```
 
    > If the command gg `fails` after installation, check your path.
