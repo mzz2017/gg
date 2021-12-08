@@ -5,7 +5,6 @@ import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	"github.com/mzz2017/gg/dialer/transport/tls"
 	"github.com/mzz2017/gg/dialer/transport/ws"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/url"
 	"strconv"
@@ -36,7 +35,7 @@ func NewTrojan(link string) (*Dialer, error) {
 	if err != nil {
 		return nil, err
 	}
-	var dialer proxy.Dialer = proxy.Direct
+	dialer := FullconeDirect
 	u := url.URL{
 		Scheme: "tls",
 		Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),

@@ -5,7 +5,6 @@ import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer/transport/simpleobfs"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/url"
 	"strconv"
@@ -39,7 +38,7 @@ func NewShadowsocks(link string) (*Dialer, error) {
 		return nil, fmt.Errorf("unsupported shadowsocks encryption method: %v", s.Cipher)
 	}
 	supportUDP := true
-	var dialer proxy.Dialer = proxy.Direct
+	dialer := FullconeDirect
 	dialer, err = protocol.NewDialer("shadowsocks", dialer, protocol.Header{
 		ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 		Cipher:       s.Cipher,

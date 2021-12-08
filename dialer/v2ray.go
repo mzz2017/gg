@@ -40,7 +40,7 @@ type V2Ray struct {
 
 func NewV2Ray(link string) (*Dialer, error) {
 	var (
-		dialer proxy.Dialer = proxy.Direct
+		dialer proxy.Dialer = SymmetricDirect
 		s      *V2Ray
 		err    error
 	)

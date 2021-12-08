@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mzz2017/gg/common"
 	ssr "github.com/v2rayA/shadowsocksR/client"
-	"golang.org/x/net/proxy"
 	"log"
 	"net"
 	"net/url"
@@ -47,7 +46,7 @@ func NewShadowsocksR(link string) (*Dialer, error) {
 			"obfs_param":     []string{s.ObfsParam},
 		}.Encode(),
 	}
-	var dialer proxy.Dialer = proxy.Direct
+	dialer := FullconeDirect
 	dialer, err = ssr.NewSSR(u.String(), dialer, nil)
 	return &Dialer{
 		Dialer:     dialer,

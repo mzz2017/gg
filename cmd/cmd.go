@@ -97,7 +97,7 @@ func init() {
 
 func GetLogger(verbose int) *logrus.Logger {
 	log := logrus.New()
-	log.SetLevel(logrus.WarnLevel)
+	log.SetLevel(logrus.InfoLevel)
 	if verbose > 0 {
 		if verbose == 1 {
 			log.SetLevel(logrus.InfoLevel)

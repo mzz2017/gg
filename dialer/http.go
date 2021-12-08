@@ -2,7 +2,6 @@ package dialer
 
 import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/http"
-	"golang.org/x/net/proxy"
 	"net/url"
 )
 
@@ -26,7 +25,7 @@ func NewHTTP(link string) (*Dialer, error) {
 		return nil, InvalidParameterErr
 	}
 
-	dialer, err := http.NewHTTPProxy(u, proxy.Direct)
+	dialer, err := http.NewHTTPProxy(u, SymmetricDirect)
 	if err != nil {
 		return nil, err
 	}
