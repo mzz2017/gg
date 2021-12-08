@@ -206,8 +206,8 @@ gg config node
 ### 操作系统/架构
 
 - [x] Linux/amd64
-- [x] Linux/arm（但未测试）
-- [x] Linux/arm64（但未测试）
+- [x] Linux/arm
+- [x] Linux/arm64
 - [ ] Linux/386
 
 ### 协议类型
@@ -215,10 +215,10 @@ gg config node
 - [x] HTTP(S)
 - [x] Socks5
 - [x] VMess(AEAD, alterID=0) / VLESS
-    - [x] tcp
-    - [x] ws
-    - [x] tls
-    - [ ] grpc
+    - [x] TCP
+    - [x] WS
+    - [x] TLS
+    - [ ] GRPC
 - [x] Shadowsocks
     - [x] AEAD Ciphers
     - [x] Simple-obfs (not tested)
@@ -230,9 +230,9 @@ gg config node
 
 ### 订阅类型
 
-- [x] base64 (v2rayN, etc.)
+- [x] Base64 (v2rayN, etc.)
 - [ ] SIP008
-- [ ] clash
-- [ ] surge
+- [ ] Clash
+- [ ] Surge
 - [ ] Quantumult
 - [ ] Quantumult X
