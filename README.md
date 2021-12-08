@@ -205,7 +205,9 @@ gg config node
 1. Q: When I use `sudo gg xxx`, it remains to ask me for share-link even though config has been set. How to solve it?
 
    A: Use `sudo -E gg xxx` to solve it.
+2. Q: Can I use it on my IPv6-only machine?
 
+   A: Of course, as long as your proxy server has an IPv6 entry.
 ## Support List
 
 ### OS/Arch
