@@ -208,6 +208,7 @@ gg config node
 2. Q: Can I use it on my IPv6-only machine?
 
    A: Of course, as long as your proxy server has an IPv6 entry.
+
 ## Support List
 
 ### OS/Arch

@@ -46,7 +46,7 @@ func NewShadowsocksR(link string) (*Dialer, error) {
 			"obfs_param":     []string{s.ObfsParam},
 		}.Encode(),
 	}
-	dialer := FullconeDirect
+	dialer := SymmetricDirect
 	dialer, err = ssr.NewSSR(u.String(), dialer, nil)
 	return &Dialer{
 		Dialer:     dialer,

@@ -38,7 +38,7 @@ func NewShadowsocks(link string) (*Dialer, error) {
 		return nil, fmt.Errorf("unsupported shadowsocks encryption method: %v", s.Cipher)
 	}
 	supportUDP := true
-	dialer := FullconeDirect
+	dialer := SymmetricDirect
 	dialer, err = protocol.NewDialer("shadowsocks", dialer, protocol.Header{
 		ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 		Cipher:       s.Cipher,

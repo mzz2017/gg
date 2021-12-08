@@ -35,7 +35,7 @@ func NewTrojan(link string) (*Dialer, error) {
 	if err != nil {
 		return nil, err
 	}
-	dialer := FullconeDirect
+	dialer := SymmetricDirect
 	u := url.URL{
 		Scheme: "tls",
 		Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
