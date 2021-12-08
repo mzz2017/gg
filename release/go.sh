@@ -30,6 +30,8 @@ else
   exit 1
 fi
 
+set -ex
+
 curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-${PLATFORM}-${ARCH}" -o /usr/local/bin/gg
 chmod +x /usr/local/bin/gg
 gg --version
