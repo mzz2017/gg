@@ -220,10 +220,10 @@ gg config node
 - [x] HTTP(S)
 - [x] Socks5
 - [x] VMess(AEAD, alterID=0) / VLESS
-    - [x] tcp
-    - [x] ws
-    - [x] tls
-    - [ ] grpc
+    - [x] TCP
+    - [x] WS
+    - [x] TLS
+    - [ ] GRPC
 - [x] Shadowsocks
     - [x] AEAD Ciphers
     - [x] Simple-obfs (not tested)
@@ -235,14 +235,14 @@ gg config node
 
 ### Subscription
 
-- [x] base64 (v2rayN, etc.)
+- [x] Base64 (v2rayN, etc.)
 - [ ] SIP008
-- [ ] clash
-- [ ] surge
+- [ ] Clash
+- [ ] Surge
 - [ ] Quantumult
 - [ ] Quantumult X
 
 ## TODO
 
-1. Use system DNS as the fallback.
+1. if (not support UDP) && (not noudp): restore the UDP target except DNS request.
 2. Restore the IP of connect that family is AF_LINKLAYER and others.
