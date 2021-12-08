@@ -27,17 +27,20 @@ func (t *Tracer) saveArgsToStorehouse(pid, inst int, args []uint64) {
 }
 
 func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
-	inst := Inst(regs)
+	//t.log.Infof("exitHandler: pid: %v,inst: %v", pid, inst(regs))
+	//defer t.log.Infof("exitHandler: pid: %v,inst: %v: end", pid, inst(regs))
+	inst := inst(regs)
 	switch inst {
 	case syscall.SYS_SOCKET:
+		//t.log.Tracef("exitHandler: SOCKET: %v, inst: %v", pid, inst)
 		args, err := t.getArgsFromStorehouse(pid, inst)
 		if err != nil {
-			t.log.Traceln(err)
+			t.log.Infoln(err)
 			return nil
 		}
-		fd, errno := ReturnValueInt(regs)
+		fd, errno := returnValueInt(regs)
 		if errno != 0 {
-			logrus.Tracef("socket error: pid: %v, errno: %v", pid, errno)
+			logrus.Infof("socket error: pid: %v, errno: %v", pid, errno)
 			return nil
 		}
 		socketInfo := SocketMetadata{
@@ -49,6 +52,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		t.saveSocketInfo(pid, fd, socketInfo)
 		t.log.Tracef("new socket (%v): pid: %v, fd %v", t.network(&socketInfo), pid, fd)
 	case syscall.SYS_FCNTL:
+		//t.log.Tracef("exitHandler: FCNTL: %v, inst: %v", pid, inst)
 		// syscall.SYS_FCNTL can be used to duplicate the file descriptor.
 		args, err := t.getArgsFromStorehouse(pid, inst)
 		if err != nil {
@@ -66,7 +70,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			logrus.Tracef("syscall.F_DUPFD: socketInfo cannot found: pid: %v, fd: %v", pid, fd)
 			return nil
 		}
-		newFD, errno := ReturnValueInt(regs)
+		newFD, errno := returnValueInt(regs)
 		if errno != 0 {
 			logrus.Tracef("socket error: pid: %v, errno: %v", pid, errno)
 			return nil
@@ -74,6 +78,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		t.saveSocketInfo(pid, newFD, *socketInfo)
 		t.log.Tracef("SYS_FCNTL: copy %v -> %v", fd, newFD)
 	case syscall.SYS_CLOSE:
+		//t.log.Tracef("exitHandler: CLOSE: %v, inst: %v", pid, inst)
 		// we do not need to know if it succeeded
 		fd := Argument(regs, 0)
 		t.removeSocketInfo(pid, int(fd))
@@ -82,11 +87,20 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 }
 
 func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
-	inst := Inst(regs)
-	args := Arguments(regs)
-	switch inst {
+	//t.log.Infof("entryHandler: pid: %v,inst: %v", pid, inst(regs))
+	//defer t.log.Infof("entryHandler: pid: %v,inst: %v: end", pid, inst(regs))
+	args := arguments(regs)
+	switch inst(regs) {
+	//case syscall.SYS_CLONE:
+	//	//t.log.Tracef("entryHandler: clone: %v", pid)
+	//	newRegs := *regs
+	//	setArgument(&newRegs, 0, args[0] & ^uint64(syscall.CLONE_UNTRACED))
+	//	if err = ptraceSetRegs(pid, &newRegs); err != nil {
+	//		return err
+	//	}
 	case syscall.SYS_SOCKET, syscall.SYS_FCNTL:
-		t.saveArgsToStorehouse(pid, inst, args)
+		//t.log.Tracef("entryHandler: SOCKET, FCNTL: %v, inst: %v", pid, inst(regs))
+		t.saveArgsToStorehouse(pid, inst(regs), args)
 	case syscall.SYS_CONNECT, syscall.SYS_SENDTO:
 		fd := args[0]
 		t.log.Tracef("syscall.SYS_CONNECT: pid: %v, fd: %v", pid, fd)
@@ -101,7 +115,7 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			pSockAddr, sockAddrLen uint64
 			orderSockAddrLen       int
 		)
-		switch Inst(regs) {
+		switch inst(regs) {
 		case syscall.SYS_CONNECT:
 			t.log.Tracef("syscall.SYS_CONNECT")
 			pSockAddr = args[1]
@@ -224,8 +238,8 @@ func pokeAddrToArgument(pid int, regs *syscall.PtraceRegs, bAddrToPoke []byte, p
 		return nil
 	}
 	newRegs := *regs
-	SetArgument(&newRegs, orderSockAddrLen, uint64(len(bAddrToPoke)))
-	if err = syscall.PtraceSetRegs(pid, &newRegs); err != nil {
+	setArgument(&newRegs, orderSockAddrLen, uint64(len(bAddrToPoke)))
+	if err = ptraceSetRegs(pid, &newRegs); err != nil {
 		return fmt.Errorf("set addr len for connect: %w", err)
 	}
 	return nil

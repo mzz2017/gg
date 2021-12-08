@@ -75,3 +75,11 @@ func isEntryStop(regs *syscall.PtraceRegs) bool {
 func inst(regs *syscall.PtraceRegs) int {
 	return int(regs.Orig_rax)
 }
+
+func ptraceSetRegs(pid int, regs *syscall.PtraceRegs) error {
+	return syscall.PtraceSetRegs(pid, regs)
+}
+
+func ptraceGetRegs(pid int, regs *syscall.PtraceRegs) error {
+	return syscall.PtraceGetRegs(pid, regs)
+}

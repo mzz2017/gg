@@ -82,3 +82,12 @@ func StringsMapToSet(s []string, mapper func(s string) string) map[string]struct
 	}
 	return m
 }
+
+func SliceUint64toUint32(from []uint64) (to []uint32) {
+	to = make([]uint32, len(from)*2)
+	for i := range from {
+		to[i*2+1] = uint32(from[i] & 0xffffffff)
+		to[i*2] = uint32((from[i] & 0xffffffff00000000) >> 32)
+	}
+	return to
+}

@@ -106,50 +106,71 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 		}
 		return 0, fmt.Errorf("PtraceSyscall() threw: %w", err)
 	}
-	//logrus.Tracef("child %v created\n", proc)
+	//t.log.Tracef("child %v created\n", proc)
 	for {
 		var status syscall.WaitStatus
 		child, err := syscall.Wait4(-1, &status, syscall.WALL, nil)
 		if err != nil {
 			return 0, fmt.Errorf("wait4() threw: %w", err)
 		}
-		//logrus.Tracef("main: %v, child: %v\n", proc, child)
+		//t.log.Tracef("main: %v, child: %v\n", proc, child)
+		if t.getSocketInfo(child, 0) == nil {
+			t.saveSocketInfo(child, 0, SocketMetadata{
+				Family: syscall.AF_LOCAL,
+				Type:   syscall.SOCK_RAW,
+			})
+			t.saveSocketInfo(child, 1, SocketMetadata{
+				Family: syscall.AF_LOCAL,
+				Type:   syscall.SOCK_RAW,
+			})
+			t.saveSocketInfo(child, 2, SocketMetadata{
+				Family: syscall.AF_LOCAL,
+				Type:   syscall.SOCK_RAW,
+			})
+		}
+		sig := 0
 		switch {
 		case status.Exited():
-			//logrus.Tracef("child %v exited\n", child)
+			//t.log.Tracef("child %v exited\n", child)
 			t.removeProcessSocketInfo(child)
 			if child == proc {
 				return status.ExitStatus(), nil
 			}
 		case status.Signaled():
-			//logrus.Tracef("child %v killed\n", child)
+			//t.log.Tracef("child %v killed\n", child)
 			t.removeProcessSocketInfo(child)
 			if child == proc {
 				return status.ExitStatus(), nil
 			}
+			sig = int(status.Signal())
 		case status.Stopped():
 			switch signal := status.StopSignal(); signal {
 			case syscall.SIGTRAP:
 				var regs syscall.PtraceRegs
-				err = syscall.PtraceGetRegs(child, &regs)
+				err = ptraceGetRegs(child, &regs)
 				if err == nil {
-					entryStop := IsEntryStop(&regs)
+					entryStop := isEntryStop(&regs)
 					if entryStop {
 						if err := t.entryHandler(child, &regs); err != nil {
-							logrus.Infof("entryHandler: %v", err)
+							t.log.Infof("entryHandler: %v", err)
 						}
 					} else {
 						if err := t.exitHandler(child, &regs); err != nil {
-							logrus.Infof("exitHandler: %v", err)
+							t.log.Infof("exitHandler: %v", err)
 						}
 					}
+				} else {
+					t.log.Tracef("PtraceGetRegs: %v", err)
 				}
 			default:
 				// urgent I/O condition, window changed, etc.
 				//logrus.Tracef("%v: stopped: %v", child, signal)
+				if signal == syscall.SIGILL {
+					t.log.Errorf("%v: stopped: %v", child, signal)
+				}
 			}
 		}
-		syscall.PtraceSyscall(child, 0)
+		syscall.PtraceSyscall(child, sig)
 	}
 }
 
