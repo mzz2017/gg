@@ -162,11 +162,3 @@ func getIovec(base *byte, l int) unix.Iovec {
 		Len:  uint64(l),
 	}
 }
-
-func ptrace(request int, pid int, addr uintptr, data uintptr) (err error) {
-	_, _, e1 := syscall.Syscall6(syscall.SYS_PTRACE, uintptr(request), uintptr(pid), uintptr(addr), uintptr(data), 0, 0)
-	if e1 != 0 {
-		err = e1
-	}
-	return
-}

@@ -5,10 +5,12 @@ import (
 	"github.com/mzz2017/gg/proxy"
 	"github.com/sirupsen/logrus"
 	proxy2 "golang.org/x/net/proxy"
+	"golang.org/x/sys/unix"
 	"os"
 	"runtime"
 	"syscall"
 	"time"
+	"unsafe"
 )
 
 type SocketMetadata struct {
@@ -113,7 +115,7 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 		if err != nil {
 			return 0, fmt.Errorf("wait4() threw: %w", err)
 		}
-		//t.log.Tracef("main: %v, child: %v\n", proc, child)
+		t.log.Tracef("main: %v, child: %v\n", proc, child)
 		if t.getSocketInfo(child, 0) == nil {
 			t.saveSocketInfo(child, 0, SocketMetadata{
 				Family: syscall.AF_LOCAL,
@@ -131,24 +133,24 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 		sig := 0
 		switch {
 		case status.Exited():
-			//t.log.Tracef("child %v exited\n", child)
+			t.log.Tracef("child %v exited\n", child)
 			t.removeProcessSocketInfo(child)
 			if child == proc {
 				return status.ExitStatus(), nil
 			}
 		case status.Signaled():
-			//t.log.Tracef("child %v killed\n", child)
+			t.log.Tracef("child %v killed\n", child)
 			t.removeProcessSocketInfo(child)
 			if child == proc {
 				return status.ExitStatus(), nil
 			}
-			sig = int(status.Signal())
 		case status.Stopped():
 			switch signal := status.StopSignal(); signal {
 			case syscall.SIGTRAP:
 				var regs syscall.PtraceRegs
 				err = ptraceGetRegs(child, &regs)
 				if err == nil {
+					t.log.Tracef("pid: %v, inst: %v", child, inst(&regs))
 					entryStop := isEntryStop(&regs)
 					if entryStop {
 						if err := t.entryHandler(child, &regs); err != nil {
@@ -163,8 +165,12 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 					t.log.Tracef("PtraceGetRegs: %v", err)
 				}
 			default:
+				var sigInfo unix.SignalfdSiginfo
+				if e := ptrace(syscall.PTRACE_GETSIGINFO, child, 0, uintptr(unsafe.Pointer(&sigInfo))); e == nil {
+					sig = int(sigInfo.Signo)
+				}
 				// urgent I/O condition, window changed, etc.
-				//logrus.Tracef("%v: stopped: %v", child, signal)
+				t.log.Tracef("%v: stopped: %v", child, signal)
 				if signal == syscall.SIGILL {
 					t.log.Errorf("%v: stopped: %v", child, signal)
 				}
