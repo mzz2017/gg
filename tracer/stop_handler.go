@@ -13,16 +13,28 @@ import (
 	"unsafe"
 )
 
-func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
-	inst := Inst(regs)
+func (t *Tracer) getArgsFromStorehouse(pid, inst int) ([]uint64, error) {
 	v, ok := t.storehouse.Get(pid, inst)
 	if !ok {
-		return fmt.Errorf("cannot get the arguments from storehouse because of neverseen: pid: %v, inst: %v", pid, inst)
+		return nil, fmt.Errorf("cannot get the arguments from storehouse because of neverseen: pid: %v, inst: %v", pid, inst)
 	}
 	t.storehouse.Remove(pid, inst)
-	args := v.([]uint64)
+	return v.([]uint64), nil
+}
+
+func (t *Tracer) saveArgsToStorehouse(pid, inst int, args []uint64) {
+	t.storehouse.Save(pid, inst, args)
+}
+
+func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
+	inst := Inst(regs)
 	switch inst {
 	case syscall.SYS_SOCKET:
+		args, err := t.getArgsFromStorehouse(pid, inst)
+		if err != nil {
+			t.log.Traceln(err)
+			return nil
+		}
 		fd, errno := ReturnValueInt(regs)
 		if errno != 0 {
 			logrus.Tracef("socket error: pid: %v, errno: %v", pid, errno)
@@ -38,6 +50,11 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		t.log.Tracef("new socket (%v): pid: %v, fd %v", t.network(&socketInfo), pid, fd)
 	case syscall.SYS_FCNTL:
 		// syscall.SYS_FCNTL can be used to duplicate the file descriptor.
+		args, err := t.getArgsFromStorehouse(pid, inst)
+		if err != nil {
+			t.log.Traceln(err)
+			return nil
+		}
 		switch args[1] {
 		case syscall.F_DUPFD, syscall.F_DUPFD_CLOEXEC:
 		default:
@@ -67,8 +84,9 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 	inst := Inst(regs)
 	args := Arguments(regs)
-	t.storehouse.Save(pid, inst, args)
 	switch inst {
+	case syscall.SYS_SOCKET, syscall.SYS_FCNTL:
+		t.saveArgsToStorehouse(pid, inst, args)
 	case syscall.SYS_CONNECT, syscall.SYS_SENDTO:
 		fd := args[0]
 		t.log.Tracef("syscall.SYS_CONNECT: pid: %v, fd: %v", pid, fd)

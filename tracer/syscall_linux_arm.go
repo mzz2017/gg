@@ -69,7 +69,7 @@ func returnValueInt(regs *syscall.PtraceRegs) (int, syscall.Errno) {
 }
 
 func isEntryStop(regs *syscall.PtraceRegs) bool {
-	return int32(regs.Uregs[0]) == -int32(syscall.ENOSYS)
+	return regs.Uregs[12] == 0
 }
 
 func inst(regs *syscall.PtraceRegs) int {
