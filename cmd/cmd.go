@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"os/exec"
+	"runtime"
 )
 
 var (
@@ -30,6 +31,8 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			}
 			// initiate config from args and config file
 			log := GetLogger(verbose)
+			log.Traceln("Version:", Version)
+			log.Tracef("OS/Arch: %v/%v\n", runtime.GOOS, runtime.GOARCH)
 			v, _ = getConfig(log, true, viper.New, cmd)
 			// validate command and get the fullPath from $PATH
 			fullPath, err := exec.LookPath(args[0])
@@ -47,8 +50,7 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 				logrus.Fatal("GetBool(noudp):", err)
 			}
 			if !noUDP && !dialer.SupportUDP() {
-				log.Warn("Your proxy server does not support UDP, so we will not redirect UDP traffic.")
-				noUDP = true
+				log.Info("Your proxy server does not support UDP, so we will not redirect UDP traffic.")
 			}
 			preserveEnv, err := cmd.Flags().GetBool("preserve-env")
 			if err != nil {

@@ -2,9 +2,9 @@ package tracer
 
 import (
 	"fmt"
+	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/proxy"
 	"github.com/sirupsen/logrus"
-	proxy2 "golang.org/x/net/proxy"
 	"golang.org/x/sys/unix"
 	"os"
 	"runtime"
@@ -21,6 +21,7 @@ type SocketMetadata struct {
 // Tracer is not thread-safe.
 type Tracer struct {
 	ignoreUDP  bool
+	supportUDP bool
 	log        *logrus.Logger
 	proxy      *proxy.Proxy
 	mainPID    int
@@ -31,9 +32,10 @@ type Tracer struct {
 	exitErr    error
 }
 
-func New(name string, argv []string, attr *os.ProcAttr, dialer proxy2.Dialer, ignoreUDP bool, logger *logrus.Logger) (*Tracer, error) {
+func New(name string, argv []string, attr *os.ProcAttr, dialer *dialer.Dialer, ignoreUDP bool, logger *logrus.Logger) (*Tracer, error) {
 	t := &Tracer{
 		log:        logger,
+		supportUDP: dialer.SupportUDP(),
 		proxy:      proxy.New(logger, dialer),
 		socketInfo: make(map[int]map[int]SocketMetadata),
 		storehouse: MakeStorehouse(),
@@ -115,7 +117,7 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 		if err != nil {
 			return 0, fmt.Errorf("wait4() threw: %w", err)
 		}
-		t.log.Tracef("main: %v, child: %v\n", proc, child)
+		//t.log.Tracef("main: %v, child: %v\n", proc, child)
 		if t.getSocketInfo(child, 0) == nil {
 			t.saveSocketInfo(child, 0, SocketMetadata{
 				Family: syscall.AF_LOCAL,
@@ -150,7 +152,7 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 				var regs syscall.PtraceRegs
 				err = ptraceGetRegs(child, &regs)
 				if err == nil {
-					t.log.Tracef("pid: %v, inst: %v", child, inst(&regs))
+					//t.log.Tracef("pid: %v, inst: %v", child, inst(&regs))
 					entryStop := isEntryStop(&regs)
 					if entryStop {
 						if err := t.entryHandler(child, &regs); err != nil {

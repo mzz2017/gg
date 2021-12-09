@@ -247,5 +247,4 @@ gg config node
 
 ## TODO
 
-1. if (not support UDP) && (not noudp): restore the UDP target except DNS request.
-2. Restore the IP of connect that family is AF_LINKLAYER and others.
+1. Restore the IP of connect that family is AF_LINKLAYER and others.

@@ -103,7 +103,7 @@ func (t *Tracer) entryHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		t.saveArgsToStorehouse(pid, inst(regs), args)
 	case syscall.SYS_CONNECT, syscall.SYS_SENDTO:
 		fd := args[0]
-		t.log.Tracef("syscall.SYS_CONNECT: pid: %v, fd: %v", pid, fd)
+		t.log.Tracef("syscall.SYS_CONNECT, syscall.SYS_SENDTO: pid: %v, fd: %v", pid, fd)
 		socketInfo, ok := t.checkSocket(pid, fd)
 		if !ok {
 			return nil
@@ -292,8 +292,15 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	network := t.network(socketInfo)
 	portHackTo := t.portHackTo(socketInfo)
 	addr := *(*RawSockaddrInet4)(unsafe.Pointer(&bSockAddr[0]))
-	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() && binary.BigEndian.Uint16(addr.Port[:]) != 53 {
+	targetPort := binary.BigEndian.Uint16(addr.Port[:])
+	if network == "udp" && !t.supportUDP && targetPort != 53 {
+		// skip UDP traffic
+		// but only keep DNS packets to the port 53
+		return nil, nil
+	}
+	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() && targetPort != 53 {
 		// skip loopback
+		// but only keep DNS packets to the port 53
 		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
 	}
@@ -330,12 +337,19 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	portHackTo := t.portHackTo(socketInfo)
 
 	addr := *(*RawSockaddrInet6)(unsafe.Pointer(&bSockAddr[0]))
+	targetPort := binary.BigEndian.Uint16(addr.Port[:])
+	if network == "udp" && !t.supportUDP && targetPort != 53 {
+		// skip UDP traffic
+		// but only keep DNS packets to the port 53
+		return nil, nil
+	}
 	ip := netaddr.IPFrom16(addr.Addr)
 	if ip.Is4in6() {
 		ip = netaddr.IPFrom4(ip.As4())
 	}
-	if ip.IsLoopback() && binary.BigEndian.Uint16(addr.Port[:]) != 53 {
+	if ip.IsLoopback() && targetPort != 53 {
 		// skip loopback
+		// but only keep DNS packets to the port 53
 		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
 	}
