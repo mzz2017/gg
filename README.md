@@ -209,6 +209,62 @@ gg config node
 
    A: Of course, as long as your proxy server has an IPv6 entry.
 
+## Shell autocompletion
+
+If you want to complete other commands while using gg, please follow the method below:
+
+### bash
+
+Add this line to `~/.bashrc`:
+```shell
+complete -F _root_command gg
+```
+
+### zsh
+
+Add this line to `~/.zshrc`:
+
+```shell
+compdef _precommand gg
+```
+
+If you get an error like `complete:13: command not found: compdef`, add following content in the beginning of the
+`.zshrc` file.
+
+```shell
+autoload -Uz compinit
+compinit
+```
+
+### fish
+
+Write following content in `/etc/fish/completions/gg.fish`:
+
+```shell
+# fish completion for gg
+
+function __fish_gg_print_remaining_args
+    set -l tokens (commandline -opc) (commandline -ct)
+    set -e tokens[1]
+    if test -n "$argv"
+        and not string match -qr '^-' $argv[1]
+        string join0 -- $argv
+        return 0
+    else
+        return 1
+    end
+end
+
+function __fish_complete_gg_subcommand
+    set -l args (__fish_gg_print_remaining_args | string split0)
+    set -lx -a PATH /usr/local/sbin /sbin /usr/sbin
+    __fish_complete_subcommand --commandline $args
+end
+
+# Complete the command we are executed under gg
+complete -c gg -x -a "(__fish_complete_gg_subcommand)"
+```
+
 ## Support List
 
 ### OS/Arch

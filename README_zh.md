@@ -204,6 +204,61 @@ gg config node
 
    A: 当然没有问题，只要你的代理服务器有 IPv6 入口即可。
 
+## Shell 自动补全
+
+如果您想在使用 gg 的时候能够补全其他命令，请参考以下方法：
+
+### bash
+
+在 `~/.bashrc` 加上一行：
+```shell
+complete -F _root_command gg
+```
+
+### zsh
+
+在 `~/.zshrc` 加上一行：
+
+```shell
+compdef _precommand gg
+```
+
+如果你收到 `complete:13: command not found: compdef` 这样的错误提示，那请将下面内容添加到 `~/.zshrc` 文件的开头：
+
+```shell
+autoload -Uz compinit
+compinit
+```
+
+### fish
+
+将以下内容写在 `/etc/fish/completions/gg.fish`：
+
+```shell
+# fish completion for gg
+
+function __fish_gg_print_remaining_args
+    set -l tokens (commandline -opc) (commandline -ct)
+    set -e tokens[1]
+    if test -n "$argv"
+        and not string match -qr '^-' $argv[1]
+        string join0 -- $argv
+        return 0
+    else
+        return 1
+    end
+end
+
+function __fish_complete_gg_subcommand
+    set -l args (__fish_gg_print_remaining_args | string split0)
+    set -lx -a PATH /usr/local/sbin /sbin /usr/sbin
+    __fish_complete_subcommand --commandline $args
+end
+
+# Complete the command we are executed under gg
+complete -c gg -x -a "(__fish_complete_gg_subcommand)"
+```
+
 ## 支持列表
 
 ### 操作系统/架构
