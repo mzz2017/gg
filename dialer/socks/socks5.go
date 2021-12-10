@@ -1,9 +1,9 @@
-package socks5
+package socks
 
 import (
 	"fmt"
 	"github.com/mzz2017/gg/dialer"
-	"github.com/txthinking/socks5"
+	"github.com/mzz2017/gg/dialer/socks/infra"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -11,12 +11,14 @@ import (
 )
 
 func init() {
-	dialer.FromLinkRegister("socks", NewSocks5)
-	dialer.FromLinkRegister("socks5", NewSocks5)
+	dialer.FromLinkRegister("socks", NewSocks) // socks -> socks5
+	dialer.FromLinkRegister("socks4", NewSocks)
+	dialer.FromLinkRegister("socks4a", NewSocks)
+	dialer.FromLinkRegister("socks5", NewSocks)
 	dialer.FromClashRegister("socks5", NewSocks5FromClashObj)
 }
 
-type Socks5 struct {
+type Socks struct {
 	Name     string `json:"name"`
 	Server   string `json:"server"`
 	Port     int    `json:"port"`
@@ -26,8 +28,8 @@ type Socks5 struct {
 	UDP      bool   `json:"udp"`
 }
 
-func NewSocks5(link string) (*dialer.Dialer, error) {
-	s, err := ParseSocks5URL(link)
+func NewSocks(link string) (*dialer.Dialer, error) {
+	s, err := ParseSocksURL(link)
 	if err != nil {
 		return nil, dialer.InvalidParameterErr
 	}
@@ -35,22 +37,19 @@ func NewSocks5(link string) (*dialer.Dialer, error) {
 }
 
 func NewSocks5FromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
-	s, err := ParseClash(o)
+	s, err := ParseClashSocks5(o)
 	if err != nil {
 		return nil, err
 	}
 	return s.Dialer()
 }
 
-func (s *Socks5) Dialer() (*dialer.Dialer, error) {
-	d, err := socks5.NewClient(net.JoinHostPort(s.Server, strconv.Itoa(s.Port)), s.Username, s.Password, 0, 0)
-	if err != nil {
-		return nil, err
-	}
-	return dialer.NewDialer(d, s.UDP, s.Name, s.ExportToURL()), nil
+func (s *Socks) Dialer() (*dialer.Dialer, error) {
+	link := s.ExportToURL()
+	return dialer.NewDialer(infra.NewDialer(link), false, s.Name, link), nil
 }
 
-func ParseClash(o *yaml.Node) (data *Socks5, err error) {
+func ParseClashSocks5(o *yaml.Node) (data *Socks, err error) {
 	type Socks5Option struct {
 		Name           string `yaml:"name"`
 		Server         string `yaml:"server"`
@@ -71,7 +70,7 @@ func ParseClash(o *yaml.Node) (data *Socks5, err error) {
 	if option.SkipCertVerify {
 		return nil, fmt.Errorf("%w: skip-cert-verify=true", dialer.UnexpectedFieldErr)
 	}
-	return &Socks5{
+	return &Socks{
 		Name:     option.Name,
 		Server:   option.Server,
 		Port:     option.Port,
@@ -82,7 +81,7 @@ func ParseClash(o *yaml.Node) (data *Socks5, err error) {
 	}, nil
 }
 
-func ParseSocks5URL(link string) (data *Socks5, err error) {
+func ParseSocksURL(link string) (data *Socks, err error) {
 	u, err := url.Parse(link)
 	if err != nil {
 		return nil, dialer.InvalidParameterErr
@@ -93,18 +92,18 @@ func ParseSocks5URL(link string) (data *Socks5, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Socks5{
+	return &Socks{
 		Name:     u.Fragment,
 		Server:   u.Hostname(),
 		Port:     port,
 		Username: u.User.Username(),
 		Password: pwd,
 		UDP:      true,
-		Protocol: "socks5",
+		Protocol: u.Scheme,
 	}, nil
 }
 
-func (s *Socks5) ExportToURL() string {
+func (s *Socks) ExportToURL() string {
 	var user *url.Userinfo
 	if s.Password != "" {
 		user = url.UserPassword(s.Username, s.Password)
@@ -112,7 +111,7 @@ func (s *Socks5) ExportToURL() string {
 		user = url.User(s.Username)
 	}
 	u := url.URL{
-		Scheme:   "socks5",
+		Scheme:   s.Protocol,
 		User:     user,
 		Host:     net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 		Fragment: s.Name,

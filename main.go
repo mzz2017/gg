@@ -9,7 +9,7 @@ import (
 	_ "github.com/mzz2017/gg/dialer/http"
 	_ "github.com/mzz2017/gg/dialer/shadowsocks"
 	_ "github.com/mzz2017/gg/dialer/shadowsocksr"
-	_ "github.com/mzz2017/gg/dialer/socks5"
+	_ "github.com/mzz2017/gg/dialer/socks"
 	_ "github.com/mzz2017/gg/dialer/trojan"
 	_ "github.com/mzz2017/gg/dialer/v2ray"
 

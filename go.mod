@@ -13,11 +13,11 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
-	github.com/txthinking/socks5 v0.0.0-20211121111206-e03c1217a50b
 	github.com/v2rayA/shadowsocksR v1.0.4
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	h12.io/socks v1.0.3
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
 )
 
@@ -56,7 +56,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mzz2017/disk-bloom v1.0.1 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c // indirect
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
@@ -65,8 +64,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/txthinking/runnergroup v0.0.0-20210608031112-152c7c4432bf // indirect
-	github.com/txthinking/x v0.0.0-20210326105829-476fab902fbe // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/v2rayA/beego/v2 v2.0.4 // indirect
 	github.com/yl2chen/cidranger v1.0.2 // indirect

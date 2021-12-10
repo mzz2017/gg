@@ -221,21 +221,24 @@ gg config node
 ### Protocol
 
 - [x] HTTP(S)
-- [x] Socks5
+- [x] Socks
+  - [x] Socks4
+  - [x] Socks4a
+  - [x] Socks5
 - [x] VMess(AEAD, alterID=0) / VLESS
-    - [x] TCP
-    - [x] WS
-    - [x] TLS
-    - [ ] GRPC
+  - [x] TCP
+  - [x] WS
+  - [x] TLS
+  - [ ] GRPC
 - [x] Shadowsocks
-    - [x] AEAD Ciphers
-    - [x] simple-obfs (not tested)
-    - [ ] v2ray-plugin
-    - [ ] Stream Ciphers
+  - [x] AEAD Ciphers
+  - [x] simple-obfs (not tested)
+  - [ ] v2ray-plugin
+  - [ ] Stream Ciphers
 - [x] ShadowsocksR
 - [x] Trojan
-    - [x] Trojan-gfw
-    - [x] Trojan-go
+  - [x] Trojan-gfw
+  - [x] Trojan-go
 
 ### Subscription
 
