@@ -244,7 +244,7 @@ gg config node
 
 - [x] Base64 (v2rayN, etc.)
 - [x] Clash
-- [ ] SIP008
+- [x] SIP008
 - [ ] Surge
 - [ ] Quantumult
 - [ ] Quantumult X
