@@ -1,10 +1,12 @@
-package dialer
+package shadowsocksr
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/mzz2017/gg/common"
+	"github.com/mzz2017/gg/dialer"
 	ssr "github.com/v2rayA/shadowsocksR/client"
-	"log"
+	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
 	"strconv"
@@ -12,8 +14,9 @@ import (
 )
 
 func init() {
-	FromLinkRegister("shadowsocksr", NewShadowsocksR)
-	FromLinkRegister("ssr", NewShadowsocksR)
+	dialer.FromLinkRegister("shadowsocksr", NewShadowsocksR)
+	dialer.FromLinkRegister("ssr", NewShadowsocksR)
+	dialer.FromClashRegister("ssr", NewShadowsocksRFromClashObj)
 }
 
 type ShadowsocksR struct {
@@ -29,12 +32,23 @@ type ShadowsocksR struct {
 	Protocol   string `json:"protocol"`
 }
 
-func NewShadowsocksR(link string) (*Dialer, error) {
+func NewShadowsocksR(link string) (*dialer.Dialer, error) {
 	s, err := ParseSSRURL(link)
 	if err != nil {
 		return nil, err
 	}
-	log.Println(s)
+	return s.Dialer()
+}
+
+func NewShadowsocksRFromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
+	s, err := ParseClash(o)
+	if err != nil {
+		return nil, err
+	}
+	return s.Dialer()
+}
+
+func (s *ShadowsocksR) Dialer() (*dialer.Dialer, error) {
 	u := url.URL{
 		Scheme: "ssr",
 		User:   url.UserPassword(s.Cipher, s.Password),
@@ -46,13 +60,41 @@ func NewShadowsocksR(link string) (*Dialer, error) {
 			"obfs_param":     []string{s.ObfsParam},
 		}.Encode(),
 	}
-	dialer := SymmetricDirect
-	dialer, err = ssr.NewSSR(u.String(), dialer, nil)
-	return &Dialer{
-		Dialer:     dialer,
-		supportUDP: false,
-		name:       s.Name,
-		link:       link,
+	d, err := ssr.NewSSR(u.String(), dialer.SymmetricDirect, nil)
+	if err != nil {
+		return nil, err
+	}
+	return dialer.NewDialer(d, false, s.Name, s.ExportToURL()), nil
+}
+
+func ParseClash(o *yaml.Node) (data *ShadowsocksR, err error) {
+	type ShadowSocksROption struct {
+		Name          string `yaml:"name"`
+		Server        string `yaml:"server"`
+		Port          int    `yaml:"port"`
+		Password      string `yaml:"password"`
+		Cipher        string `yaml:"cipher"`
+		Obfs          string `yaml:"obfs"`
+		ObfsParam     string `yaml:"obfs-param,omitempty"`
+		Protocol      string `yaml:"protocol"`
+		ProtocolParam string `yaml:"protocol-param,omitempty"`
+		UDP           bool   `yaml:"udp,omitempty"`
+	}
+	var option ShadowSocksROption
+	if err = o.Decode(&option); err != nil {
+		return nil, err
+	}
+	return &ShadowsocksR{
+		Name:       option.Name,
+		Server:     option.Server,
+		Port:       option.Port,
+		Password:   option.Password,
+		Cipher:     option.Cipher,
+		Proto:      option.Protocol,
+		ProtoParam: option.ProtocolParam,
+		Obfs:       option.Obfs,
+		ObfsParam:  option.ObfsParam,
+		Protocol:   "shadowsocksr",
 	}, nil
 }
 
@@ -120,8 +162,25 @@ func ParseSSRURL(u string) (data *ShadowsocksR, err error) {
 		info, ok = parse(content)
 	}
 	if !ok {
-		err = fmt.Errorf("%w: unrecognized ssr address", InvalidParameterErr)
+		err = fmt.Errorf("%w: unrecognized ssr address", dialer.InvalidParameterErr)
 		return
 	}
 	return &info, nil
+}
+
+func (s *ShadowsocksR) ExportToURL() string {
+	/* ssr://server:port:proto:method:obfs:URLBASE64(password)/?remarks=URLBASE64(remarks)&protoparam=URLBASE64(protoparam)&obfsparam=URLBASE64(obfsparam)) */
+	return fmt.Sprintf("ssr://%v", strings.TrimSuffix(base64.URLEncoding.EncodeToString([]byte(
+		fmt.Sprintf(
+			"%v:%v:%v:%v:%v/?remarks=%v&protoparam=%v&obfsparam=%v",
+			net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+			s.Proto,
+			s.Cipher,
+			s.Obfs,
+			base64.URLEncoding.EncodeToString([]byte(s.Password)),
+			base64.URLEncoding.EncodeToString([]byte(s.Name)),
+			base64.URLEncoding.EncodeToString([]byte(s.ProtoParam)),
+			base64.URLEncoding.EncodeToString([]byte(s.ObfsParam)),
+		),
+	)), "="))
 }

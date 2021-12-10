@@ -130,6 +130,9 @@ func getConfig(log *logrus.Logger, bindToConfig bool, newViper func() *viper.Vip
 			//log.Warn("Please use --node only on trusted computers, because it may leave a record in command history.")
 			v.BindPFlag("node", flagCmd.PersistentFlags().Lookup("node"))
 		}
+		if subscription, _ := flagCmd.PersistentFlags().GetString("subscription"); subscription != v.Get("subscription.link") {
+			v.Set("subscription.cache_last_node", "false")
+		}
 		v.BindPFlag("subscription.link", flagCmd.PersistentFlags().Lookup("subscription"))
 		if ok, _ := flagCmd.PersistentFlags().GetBool("select"); ok {
 			v.Set("subscription.select", "manual")

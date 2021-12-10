@@ -103,7 +103,7 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool) (d *dialer.Dia
 			}()
 		}
 		log.Infoln("Pulling the subscription...")
-		dialers, err := getDialersFromSubscription(log, config.ParamsObj.Subscription.Link)
+		dialers, err := pullDialersFromSubscription(log, config.ParamsObj.Subscription.Link)
 		if err != nil {
 			return nil, err
 		}

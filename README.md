@@ -229,7 +229,8 @@ gg config node
     - [ ] GRPC
 - [x] Shadowsocks
     - [x] AEAD Ciphers
-    - [x] Simple-obfs (not tested)
+    - [x] simple-obfs (not tested)
+    - [ ] v2ray-plugin
     - [ ] Stream Ciphers
 - [x] ShadowsocksR
 - [x] Trojan
@@ -239,8 +240,8 @@ gg config node
 ### Subscription
 
 - [x] Base64 (v2rayN, etc.)
+- [x] Clash
 - [ ] SIP008
-- [ ] Clash
 - [ ] Surge
 - [ ] Quantumult
 - [ ] Quantumult X

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/fatih/structs"
+	"net/url"
 	"reflect"
 	"strings"
 )
@@ -26,6 +27,13 @@ func BoolToString(b bool) string {
 		return "true"
 	}
 	return "false"
+}
+
+func StringToBool(s string) bool {
+	if strings.EqualFold(s, "true") || s == "1" {
+		return true
+	}
+	return false
 }
 
 func Base64URLDecode(s string) (string, error) {
@@ -90,4 +98,11 @@ func SliceUint64toUint32(from []uint64) (to []uint32) {
 		to[i*2] = uint32((from[i] & 0xffffffff00000000) >> 32)
 	}
 	return to
+}
+
+func SetValue(values *url.Values, key string, value string) {
+	if value == "" {
+		return
+	}
+	values.Set(key, value)
 }

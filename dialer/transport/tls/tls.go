@@ -37,7 +37,9 @@ func NewTls(s string, d proxy.Dialer) (*Tls, error) {
 		query.Get("skipVerify") == "true" || query.Get("skipVerify") == "1" {
 		t.skipVerify = true
 	}
-
+	if t.serverName == "" {
+		t.serverName = u.Hostname()
+	}
 	t.tlsConfig = &tls.Config{
 		ServerName:         t.serverName,
 		InsecureSkipVerify: t.skipVerify,

@@ -1,22 +1,26 @@
-package dialer
+package v2ray
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mzz2017/gg/common"
+	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/dialer/transport/tls"
 	"github.com/mzz2017/gg/dialer/transport/ws"
-	"golang.org/x/net/proxy"
+	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 func init() {
-	FromLinkRegister("vmess", NewV2Ray)
-	FromLinkRegister("vless", NewV2Ray)
+	dialer.FromLinkRegister("vmess", NewV2Ray)
+	dialer.FromLinkRegister("vless", NewV2Ray)
+	dialer.FromClashRegister("vmess", NewVMessFromClashObj)
 }
 
 type V2Ray struct {
@@ -38,11 +42,10 @@ type V2Ray struct {
 	Protocol      string `json:"protocol"`
 }
 
-func NewV2Ray(link string) (*Dialer, error) {
+func NewV2Ray(link string) (*dialer.Dialer, error) {
 	var (
-		dialer proxy.Dialer = SymmetricDirect
-		s      *V2Ray
-		err    error
+		s   *V2Ray
+		err error
 	)
 	switch {
 	case strings.HasPrefix(link, "vmess://"):
@@ -51,7 +54,7 @@ func NewV2Ray(link string) (*Dialer, error) {
 			return nil, err
 		}
 		if s.Aid != "0" && s.Aid != "" {
-			return nil, fmt.Errorf("%w: aid: %v, we only support AEAD encryption", UnexpectedFieldErr, s.Aid)
+			return nil, fmt.Errorf("%w: aid: %v, we only support AEAD encryption", dialer.UnexpectedFieldErr, s.Aid)
 		}
 	case strings.HasPrefix(link, "vless://"):
 		s, err = ParseVlessURL(link)
@@ -59,8 +62,23 @@ func NewV2Ray(link string) (*Dialer, error) {
 			return nil, err
 		}
 	default:
-		return nil, InvalidParameterErr
+		return nil, dialer.InvalidParameterErr
 	}
+	return s.Dialer()
+}
+
+func NewVMessFromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
+	s, err := ParseClashVMess(o)
+	if err != nil {
+		return nil, err
+	}
+	return s.Dialer()
+}
+
+func (s *V2Ray) Dialer() (data *dialer.Dialer, err error) {
+	var (
+		d = dialer.SymmetricDirect
+	)
 
 	switch strings.ToLower(s.Net) {
 	case "ws":
@@ -81,7 +99,7 @@ func NewV2Ray(link string) (*Dialer, error) {
 				"sni":  []string{sni},
 			}.Encode(),
 		}
-		dialer, err = ws.NewWs(u.String(), dialer)
+		d, err = ws.NewWs(u.String(), d)
 		if err != nil {
 			return nil, err
 		}
@@ -98,19 +116,19 @@ func NewV2Ray(link string) (*Dialer, error) {
 					"sni": []string{sni},
 				}.Encode(),
 			}
-			dialer, err = tls.NewTls(u.String(), dialer)
+			d, err = tls.NewTls(u.String(), d)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if s.Type != "none" && s.Type != "" {
-			return nil, fmt.Errorf("%w: type: %v", UnexpectedFieldErr, s.Type)
+			return nil, fmt.Errorf("%w: type: %v", dialer.UnexpectedFieldErr, s.Type)
 		}
 	default:
-		return nil, fmt.Errorf("%w: network: %v", UnexpectedFieldErr, s.Net)
+		return nil, fmt.Errorf("%w: network: %v", dialer.UnexpectedFieldErr, s.Net)
 	}
 
-	if dialer, err = protocol.NewDialer(s.Protocol, dialer, protocol.Header{
+	if d, err = protocol.NewDialer(s.Protocol, d, protocol.Header{
 		ProxyAddress: net.JoinHostPort(s.Add, s.Port),
 		Cipher:       "aes-128-gcm",
 		Password:     s.ID,
@@ -118,14 +136,73 @@ func NewV2Ray(link string) (*Dialer, error) {
 	}); err != nil {
 		return nil, err
 	}
-	return &Dialer{
-		Dialer:     dialer,
-		supportUDP: true,
-		name:       s.Ps,
-		link:       link,
-	}, nil
+	return dialer.NewDialer(d, true, s.Ps, s.ExportToURL()), nil
 }
 
+func ParseClashVMess(o *yaml.Node) (data *V2Ray, err error) {
+	type WSOptions struct {
+		Path                string            `yaml:"path,omitempty"`
+		Headers             map[string]string `yaml:"headers,omitempty"`
+		MaxEarlyData        int               `yaml:"max-early-data,omitempty"`
+		EarlyDataHeaderName string            `yaml:"early-data-header-name,omitempty"`
+	}
+	type VmessOption struct {
+		Name           string      `yaml:"name"`
+		Server         string      `yaml:"server"`
+		Port           int         `yaml:"port"`
+		UUID           string      `yaml:"uuid"`
+		AlterID        int         `yaml:"alterId"`
+		Cipher         string      `yaml:"cipher"`
+		UDP            bool        `yaml:"udp,omitempty"`
+		Network        string      `yaml:"network,omitempty"`
+		TLS            bool        `yaml:"tls,omitempty"`
+		SkipCertVerify bool        `yaml:"skip-cert-verify,omitempty"`
+		ServerName     string      `yaml:"servername,omitempty"`
+		HTTPOpts       interface{} `yaml:"http-opts,omitempty"`
+		HTTP2Opts      interface{} `yaml:"h2-opts,omitempty"`
+		GrpcOpts       interface{} `yaml:"grpc-opts,omitempty"`
+		WSOpts         WSOptions   `yaml:"ws-opts,omitempty"`
+
+		// TODO: remove these until 2022
+		WSHeaders map[string]string `yaml:"ws-headers,omitempty"`
+		WSPath    string            `yaml:"ws-path,omitempty"`
+	}
+	var option VmessOption
+	if err = o.Decode(&option); err != nil {
+		return nil, err
+	}
+	if option.WSOpts.Path != "" {
+		option.WSPath = option.WSOpts.Path
+	}
+	if len(option.WSOpts.Headers) != 0 {
+		option.WSHeaders = option.WSOpts.Headers
+	}
+	if option.Network == "" {
+		option.Network = "tcp"
+	}
+	s := &V2Ray{
+		Ps:            option.Name,
+		Add:           option.Server,
+		Port:          strconv.Itoa(option.Port),
+		ID:            option.UUID,
+		Aid:           strconv.Itoa(option.AlterID),
+		Net:           option.Network,
+		Type:          "none", // FIXME
+		Host:          option.WSHeaders["Host"],
+		SNI:           option.ServerName,
+		Path:          option.WSPath,
+		AllowInsecure: false,
+		V:             "2",
+		Protocol:      "vmess",
+	}
+	if option.SkipCertVerify {
+		return nil, fmt.Errorf("%w: skip-cert-verify=true", dialer.UnexpectedFieldErr)
+	}
+	if option.TLS {
+		s.TLS = "tls"
+	}
+	return s, nil
+}
 func ParseVlessURL(vless string) (data *V2Ray, err error) {
 	u, err := url.Parse(vless)
 	if err != nil {
@@ -242,4 +319,51 @@ func ParseVmessURL(vmess string) (data *V2Ray, err error) {
 	}
 	info.Protocol = "vmess"
 	return &info, nil
+}
+
+func (s *V2Ray) ExportToURL() string {
+	switch s.Protocol {
+	case "vless":
+		// https://github.com/XTLS/Xray-core/issues/91
+		var query = make(url.Values)
+		common.SetValue(&query, "type", s.Net)
+		common.SetValue(&query, "security", s.TLS)
+		switch s.Net {
+		case "websocket", "ws", "http", "h2":
+			common.SetValue(&query, "path", s.Path)
+			common.SetValue(&query, "host", s.Host)
+		case "mkcp", "kcp":
+			common.SetValue(&query, "headerType", s.Type)
+			common.SetValue(&query, "seed", s.Path)
+		case "tcp":
+			common.SetValue(&query, "headerType", s.Type)
+			common.SetValue(&query, "host", s.Host)
+			common.SetValue(&query, "path", s.Path)
+		case "grpc":
+			common.SetValue(&query, "serviceName", s.Path)
+		}
+		//TODO: QUIC
+		if s.TLS != "none" {
+			common.SetValue(&query, "sni", s.Host) // FIXME: it may be different from ws's host
+			common.SetValue(&query, "alpn", s.Alpn)
+		}
+		if s.TLS == "xtls" {
+			common.SetValue(&query, "flow", s.Flow)
+		}
+
+		U := url.URL{
+			Scheme:   "vless",
+			User:     url.User(s.ID),
+			Host:     net.JoinHostPort(s.Add, s.Port),
+			RawQuery: query.Encode(),
+			Fragment: s.Ps,
+		}
+		return U.String()
+	case "vmess":
+		s.V = "2"
+		b, _ := jsoniter.Marshal(s)
+		return "vmess://" + strings.TrimSuffix(base64.StdEncoding.EncodeToString(b), "=")
+	}
+	//log.Warn("unexpected protocol: %v", v.Protocol)
+	return ""
 }

@@ -295,12 +295,12 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	targetPort := binary.BigEndian.Uint16(addr.Port[:])
 	if network == "udp" && !t.supportUDP && targetPort != 53 {
 		// skip UDP traffic
-		// but only keep DNS packets to the port 53
+		// but only keep DNS packets sent to the port 53
 		return nil, nil
 	}
-	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() && targetPort != 53 {
+	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() && !(network == "udp" && targetPort == 53) {
 		// skip loopback
-		// but only keep DNS packets to the port 53
+		// but only keep DNS packets sent to the port 53
 		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
 	}
@@ -338,18 +338,19 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 
 	addr := *(*RawSockaddrInet6)(unsafe.Pointer(&bSockAddr[0]))
 	targetPort := binary.BigEndian.Uint16(addr.Port[:])
+
 	if network == "udp" && !t.supportUDP && targetPort != 53 {
 		// skip UDP traffic
-		// but only keep DNS packets to the port 53
+		// but only keep DNS packets sent to the port 53
 		return nil, nil
 	}
 	ip := netaddr.IPFrom16(addr.Addr)
 	if ip.Is4in6() {
 		ip = netaddr.IPFrom4(ip.As4())
 	}
-	if ip.IsLoopback() && targetPort != 53 {
+	if ip.IsLoopback() && !(network == "udp" && targetPort == 53) {
 		// skip loopback
-		// but only keep DNS packets to the port 53
+		// but only keep DNS packets sent to the port 53
 		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
 	}

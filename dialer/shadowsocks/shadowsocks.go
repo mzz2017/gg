@@ -1,10 +1,13 @@
-package dialer
+package shadowsocks
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	"github.com/mzz2017/gg/common"
+	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/dialer/transport/simpleobfs"
+	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
 	"strconv"
@@ -12,8 +15,9 @@ import (
 )
 
 func init() {
-	FromLinkRegister("shadowsocks", NewShadowsocks)
-	FromLinkRegister("ss", NewShadowsocks)
+	dialer.FromLinkRegister("shadowsocks", NewShadowsocksFromLink)
+	dialer.FromLinkRegister("ss", NewShadowsocksFromLink)
+	dialer.FromClashRegister("ss", NewShadowsocksFromClashObj)
 }
 
 type Shadowsocks struct {
@@ -23,23 +27,36 @@ type Shadowsocks struct {
 	Password string `json:"password"`
 	Cipher   string `json:"cipher"`
 	Plugin   Sip003 `json:"plugin"`
+	UDP      bool   `json:"udp"`
 	Protocol string `json:"protocol"`
 }
 
-func NewShadowsocks(link string) (*Dialer, error) {
+func NewShadowsocksFromLink(link string) (*dialer.Dialer, error) {
 	s, err := ParseSSURL(link)
 	if err != nil {
 		return nil, err
 	}
+	return s.Dialer()
+}
+
+func NewShadowsocksFromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
+	s, err := ParseClash(o)
+	if err != nil {
+		return nil, err
+	}
+	return s.Dialer()
+}
+
+func (s *Shadowsocks) Dialer() (*dialer.Dialer, error) {
 	// FIXME: support plain/none.
 	switch s.Cipher {
 	case "aes-256-gcm", "aes-128-gcm", "chacha20-poly1305", "chacha20-ietf-poly1305":
 	default:
 		return nil, fmt.Errorf("unsupported shadowsocks encryption method: %v", s.Cipher)
 	}
-	supportUDP := true
-	dialer := SymmetricDirect
-	dialer, err = protocol.NewDialer("shadowsocks", dialer, protocol.Header{
+	supportUDP := s.UDP
+	d := dialer.SymmetricDirect
+	d, err := protocol.NewDialer("shadowsocks", d, protocol.Header{
 		ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 		Cipher:       s.Cipher,
 		Password:     s.Password,
@@ -59,18 +76,52 @@ func NewShadowsocks(link string) (*Dialer, error) {
 				"uri":  []string{s.Plugin.Opts.Path},
 			}.Encode(),
 		}
-		dialer, err = simpleobfs.NewSimpleObfs(uSimpleObfs.String(), dialer)
+		d, err = simpleobfs.NewSimpleObfs(uSimpleObfs.String(), d)
 		if err != nil {
 			return nil, err
 		}
 		supportUDP = false
 	}
-	return &Dialer{
-		Dialer:     dialer,
-		supportUDP: supportUDP,
-		name:       s.Name,
-		link:       link,
-	}, nil
+	return dialer.NewDialer(d, supportUDP, s.Name, s.ExportToURL()), nil
+}
+
+func ParseClash(o *yaml.Node) (data *Shadowsocks, err error) {
+	type simpleObfsOption struct {
+		Mode string `obfs:"mode,omitempty"`
+		Host string `obfs:"host,omitempty"`
+	}
+	type ShadowSocksOption struct {
+		Name       string           `yaml:"name"`
+		Server     string           `yaml:"server"`
+		Port       int              `yaml:"port"`
+		Password   string           `yaml:"password"`
+		Cipher     string           `yaml:"cipher"`
+		UDP        bool             `yaml:"udp,omitempty"`
+		Plugin     string           `yaml:"plugin,omitempty"`
+		PluginOpts simpleObfsOption `yaml:"plugin-opts,omitempty"`
+	}
+	var option ShadowSocksOption
+	if err = o.Decode(&option); err != nil {
+		return nil, err
+	}
+	data = &Shadowsocks{
+		Name:     option.Name,
+		Server:   option.Server,
+		Port:     option.Port,
+		Password: option.Password,
+		Cipher:   option.Cipher,
+		UDP:      option.UDP,
+		Protocol: "shadowsocks",
+	}
+	if option.Plugin == "obfs" {
+		data.Plugin.Name = "simple-obfs"
+		data.Plugin.Opts.Obfs = option.PluginOpts.Mode
+		data.Plugin.Opts.Host = data.Plugin.Opts.Host
+		if data.Plugin.Opts.Host == "" {
+			data.Plugin.Opts.Host = "bing.com"
+		}
+	}
+	return data, nil
 }
 
 func ParseSSURL(u string) (data *Shadowsocks, err error) {
@@ -105,6 +156,7 @@ func ParseSSURL(u string) (data *Shadowsocks, err error) {
 			Port:     port,
 			Name:     u.Fragment,
 			Plugin:   sip003,
+			UDP:      sip003.Name == "",
 			Protocol: "shadowsocks",
 		}, true
 	}
@@ -138,7 +190,7 @@ func ParseSSURL(u string) (data *Shadowsocks, err error) {
 		v, ok = parse(t)
 	}
 	if !ok {
-		return nil, fmt.Errorf("%w: unrecognized ss address", InvalidParameterErr)
+		return nil, fmt.Errorf("%w: unrecognized ss address", dialer.InvalidParameterErr)
 	}
 	return v, nil
 }
@@ -148,7 +200,7 @@ type Sip003 struct {
 	Opts Sip003Opts `json:"opts"`
 }
 type Sip003Opts struct {
-	Tls  string `json:"tls"`
+	Tls  string `json:"tls"` // for v2ray-plugin
 	Obfs string `json:"obfs"`
 	Host string `json:"host"`
 	Path string `json:"uri"`
@@ -204,4 +256,20 @@ func (s *Sip003) String() string {
 		list = append(list, "obfs-uri="+s.Opts.Path)
 	}
 	return strings.Join(list, ";")
+}
+
+func (s *Shadowsocks) ExportToURL() string {
+	// sip002
+	u := &url.URL{
+		Scheme:   "ss",
+		User:     url.User(strings.TrimSuffix(base64.URLEncoding.EncodeToString([]byte(s.Cipher+":"+s.Password)), "=")),
+		Host:     net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+		Fragment: s.Name,
+	}
+	if s.Plugin.Name != "" {
+		q := u.Query()
+		q.Set("plugin", s.Plugin.String())
+		u.RawQuery = q.Encode()
+	}
+	return u.String()
 }

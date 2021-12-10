@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/net/proxy"
+	"gopkg.in/yaml.v3"
 	"net"
 	"net/http"
 	"time"
@@ -21,6 +22,15 @@ type Dialer struct {
 	supportUDP bool
 	name       string
 	link       string
+}
+
+func NewDialer(dialer proxy.Dialer, supportUDP bool, name string, link string) *Dialer {
+	return &Dialer{
+		Dialer:     dialer,
+		supportUDP: supportUDP,
+		name:       name,
+		link:       link,
+	}
 }
 
 func (d *Dialer) SupportUDP() bool {
@@ -70,6 +80,27 @@ func FromLinkRegister(name string, creator FromLinkCreator) {
 func NewFromLink(name string, link string) (dialer *Dialer, err error) {
 	if creator, ok := fromLinkCreators[name]; ok {
 		return creator(link)
+	} else {
+		return nil, fmt.Errorf("unexpected link type: %v", name)
+	}
+}
+
+type FromClashCreator func(clashObj *yaml.Node) (dialer *Dialer, err error)
+
+var fromClashCreators = make(map[string]FromClashCreator)
+
+func FromClashRegister(name string, creator FromClashCreator) {
+	fromClashCreators[name] = creator
+}
+
+func NewFromClash(clashObj *yaml.Node) (dialer *Dialer, err error) {
+	preUnload := make(map[string]interface{})
+	if err := clashObj.Decode(&preUnload); err != nil {
+		return nil, err
+	}
+	name, _ := preUnload["type"].(string)
+	if creator, ok := fromClashCreators[name]; ok {
+		return creator(clashObj)
 	} else {
 		return nil, fmt.Errorf("unexpected link type: %v", name)
 	}
