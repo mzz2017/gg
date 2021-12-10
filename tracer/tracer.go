@@ -5,12 +5,10 @@ import (
 	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/proxy"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sys/unix"
 	"os"
 	"runtime"
 	"syscall"
 	"time"
-	"unsafe"
 )
 
 type SocketMetadata struct {
@@ -167,14 +165,15 @@ func (t *Tracer) trace(proc int) (exitCode int, err error) {
 					t.log.Tracef("PtraceGetRegs: %v", err)
 				}
 			default:
-				var sigInfo unix.SignalfdSiginfo
-				if e := ptrace(syscall.PTRACE_GETSIGINFO, child, 0, uintptr(unsafe.Pointer(&sigInfo))); e == nil {
-					sig = int(sigInfo.Signo)
-				}
 				// urgent I/O condition, window changed, etc.
-				t.log.Tracef("%v: stopped: %v", child, signal)
-				if signal == syscall.SIGILL {
-					t.log.Errorf("%v: stopped: %v", child, signal)
+				sig = int(signal)
+				switch signal {
+				case syscall.SIGSTOP:
+					sig = 0
+				case syscall.SIGILL:
+					t.log.Errorf("%v: %v", child, signal)
+				default:
+					t.log.Tracef("%v: %v", child, signal)
 				}
 			}
 		}

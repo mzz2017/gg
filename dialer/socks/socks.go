@@ -25,7 +25,6 @@ type Socks struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Protocol string `json:"protocol"`
-	UDP      bool   `json:"udp"`
 }
 
 func NewSocks(link string) (*dialer.Dialer, error) {
@@ -76,7 +75,6 @@ func ParseClashSocks5(o *yaml.Node) (data *Socks, err error) {
 		Port:     option.Port,
 		Username: option.UserName,
 		Password: option.Password,
-		UDP:      option.UDP,
 		Protocol: "socks5",
 	}, nil
 }
@@ -92,13 +90,16 @@ func ParseSocksURL(link string) (data *Socks, err error) {
 	if err != nil {
 		return nil, err
 	}
+	// socks -> socks5
+	if u.Scheme == "socks" {
+		u.Scheme = "socks5"
+	}
 	return &Socks{
 		Name:     u.Fragment,
 		Server:   u.Hostname(),
 		Port:     port,
 		Username: u.User.Username(),
 		Password: pwd,
-		UDP:      true,
 		Protocol: u.Scheme,
 	}, nil
 }
