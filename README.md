@@ -238,7 +238,7 @@ compinit
 
 ### fish
 
-Write following content in `/etc/fish/completions/gg.fish`:
+Write following content in `~/.config/fish/completions/gg.fish`:
 
 ```shell
 # fish completion for gg
@@ -257,7 +257,6 @@ end
 
 function __fish_complete_gg_subcommand
     set -l args (__fish_gg_print_remaining_args | string split0)
-    set -lx -a PATH /usr/local/sbin /sbin /usr/sbin
     __fish_complete_subcommand --commandline $args
 end
 
