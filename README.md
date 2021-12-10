@@ -34,9 +34,9 @@ Compared to proxychains or graftcp, we have the following advantages:
 1. Run this command to download the latest release of go-graft:
 
     ```bash
-    # curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh | sudo sh
+    # curl -Ls https://github.com/mzz2017/gg/raw/main/release/go.sh | sudo sh
     # use the mirror:
-    curl -L https://hubmirror.v2raya.org/raw/mzz2017/gg/main/release/go.sh | sudo sh
+    curl -Ls https://hubmirror.v2raya.org/raw/mzz2017/gg/main/release/go.sh | sudo sh
     ```
 
    > If the command gg `fails` after installation, check your path.
