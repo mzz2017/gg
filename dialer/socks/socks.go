@@ -45,7 +45,7 @@ func NewSocks5FromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
 
 func (s *Socks) Dialer() (*dialer.Dialer, error) {
 	link := s.ExportToURL()
-	return dialer.NewDialer(infra.NewDialer(link), false, s.Name, link), nil
+	return dialer.NewDialer(infra.NewDialer(link), false, s.Name, s.Protocol, link), nil
 }
 
 func ParseClashSocks5(o *yaml.Node) (data *Socks, err error) {

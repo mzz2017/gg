@@ -16,6 +16,7 @@ require (
 	github.com/v2rayA/shadowsocksR v1.0.4
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881
+	golang.org/x/tools v0.1.5
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	h12.io/socks v1.0.3
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6

@@ -136,7 +136,7 @@ func (s *V2Ray) Dialer() (data *dialer.Dialer, err error) {
 	}); err != nil {
 		return nil, err
 	}
-	return dialer.NewDialer(d, true, s.Ps, s.ExportToURL()), nil
+	return dialer.NewDialer(d, true, s.Ps, s.Protocol, s.ExportToURL()), nil
 }
 
 func ParseClashVMess(o *yaml.Node) (data *V2Ray, err error) {

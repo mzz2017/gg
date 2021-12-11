@@ -97,7 +97,7 @@ func (s *Trojan) Dialer() (*dialer.Dialer, error) {
 	}); err != nil {
 		return nil, err
 	}
-	return dialer.NewDialer(d, true, s.Name, s.ExportToURL()), nil
+	return dialer.NewDialer(d, true, s.Name, s.Protocol, s.ExportToURL()), nil
 }
 
 func ParseTrojanURL(u string) (data *Trojan, err error) {
@@ -163,6 +163,10 @@ func ParseClash(o *yaml.Node) (data *Trojan, err error) {
 	if err = o.Decode(&option); err != nil {
 		return nil, err
 	}
+	proto := "trojan"
+	if option.Network != "" && option.Network != "origin" {
+		proto = "trojan-go"
+	}
 	return &Trojan{
 		Name:          option.Name,
 		Server:        option.Server,
@@ -174,7 +178,7 @@ func ParseClash(o *yaml.Node) (data *Trojan, err error) {
 		Host:          option.WSOpts.Headers["Host"],
 		Path:          option.WSOpts.Path,
 		AllowInsecure: option.SkipCertVerify,
-		Protocol:      "trojan-go",
+		Protocol:      proto,
 	}, nil
 }
 

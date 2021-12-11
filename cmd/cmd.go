@@ -26,7 +26,8 @@ var (
 program to your modern proxy without installing any other programs.`,
 		Version: Version,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
+			hasSelectFlag, _ := cmd.PersistentFlags().GetBool("select")
+			if len(args) == 0 && !hasSelectFlag {
 				fmt.Println(`No command is given, you can try:
 $ gg --help
 or
@@ -39,14 +40,24 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			log.Tracef("OS/Arch: %v/%v\n", runtime.GOOS, runtime.GOARCH)
 			v, _ = getConfig(log, true, viper.New, cmd)
 			// validate command and get the fullPath from $PATH
-			fullPath, err := exec.LookPath(args[0])
-			if err != nil {
-				logrus.Fatal("exec.LookPath:", err)
+			var (
+				fullPath string
+				err      error
+			)
+			if len(args) != 0 {
+				fullPath, err = exec.LookPath(args[0])
+				if err != nil {
+					logrus.Fatal("exec.LookPath:", err)
+				}
 			}
 			// get dialer
 			dialer, err := GetDialer(log)
 			if err != nil {
 				logrus.Fatal("GetDialer:", err)
+			}
+
+			if len(args) == 0 {
+				return
 			}
 
 			noUDP, err := cmd.Flags().GetBool("noudp")

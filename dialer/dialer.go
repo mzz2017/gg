@@ -21,14 +21,16 @@ type Dialer struct {
 	proxy.Dialer
 	supportUDP bool
 	name       string
+	protocol   string
 	link       string
 }
 
-func NewDialer(dialer proxy.Dialer, supportUDP bool, name string, link string) *Dialer {
+func NewDialer(dialer proxy.Dialer, supportUDP bool, name string, protocol string, link string) *Dialer {
 	return &Dialer{
 		Dialer:     dialer,
 		supportUDP: supportUDP,
 		name:       name,
+		protocol:   protocol,
 		link:       link,
 	}
 }
@@ -39,6 +41,10 @@ func (d *Dialer) SupportUDP() bool {
 
 func (d *Dialer) Name() string {
 	return d.name
+}
+
+func (d *Dialer) Protocol() string {
+	return d.protocol
 }
 
 func (d *Dialer) Link() string {

@@ -9,12 +9,20 @@ import (
 	"github.com/mzz2017/gg/dialer"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/tools/container/intsets"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 var UnableToConnectErr = fmt.Errorf("unable to connect to the proxy node")
+
+type DialerWithLatency struct {
+	Dialer  *dialer.Dialer
+	Latency int
+}
 
 func GetDialer(log *logrus.Logger) (d *dialer.Dialer, err error) {
 	nodeLink := config.ParamsObj.Node
@@ -71,12 +79,14 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool) (d *dialer.Dia
 		return nil, fmt.Errorf("subscription link is not set")
 	}
 	switch config.ParamsObj.Subscription.Select {
-	case "manual":
+	case "manual", "select", "__select__":
 		if config.ParamsObj.Subscription.CacheLastNode {
-			d = GetDialerFromSubscriptionLastNodeCache(testNode)
-			if d != nil {
-				log.Infof("Use the cached node: %v\n", d.Name())
-				return d, nil
+			if config.ParamsObj.Subscription.Select != "__select__" {
+				d = GetDialerFromSubscriptionLastNodeCache(testNode)
+				if d != nil {
+					log.Infof("Use the cached node: %v\n", d.Name())
+					return d, nil
+				}
 			}
 			defer func() {
 				if d != nil {
@@ -84,8 +94,32 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool) (d *dialer.Dia
 				}
 			}()
 		}
-		// TODO
-		log.Fatal("TODO: manual selection")
+		log.Infoln("Pulling the subscription...")
+		dialers, err := pullDialersFromSubscription(log, config.ParamsObj.Subscription.Link)
+		if err != nil {
+			return nil, err
+		}
+		var result []*DialerWithLatency
+		if testNode {
+			log.Warnln("Test nodes...")
+			result = testLatencies(log, dialers)
+		} else {
+			result = make([]*DialerWithLatency, 0, len(dialers))
+			for i := range dialers {
+				result = append(result, &DialerWithLatency{
+					Dialer:  dialers[i],
+					Latency: 0,
+				})
+			}
+		}
+		if len(result) == 0 {
+			break
+		}
+		d, err := selectNodeFromInput(result)
+		if err != nil {
+			return nil, err
+		}
+		return d.Dialer, nil
 	default:
 		log.Warnf("Unexpected select option: %v. Fallback to \"first\".", config.ParamsObj.Subscription.Select)
 		fallthrough
@@ -110,10 +144,12 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool) (d *dialer.Dia
 		if testNode {
 			log.Infoln("Finding the first available node...")
 			if d = firstAvailableDialer(log, dialers); d != nil {
+				log.Infof("Use the node: %v\n", d.Name())
 				return d, nil
 			}
 		} else {
 			if len(dialers) > 0 {
+				log.Infof("Use the node: %v\n", dialers[0].Name())
 				return dialers[0], nil
 			}
 		}
@@ -126,10 +162,10 @@ func cacheSubscriptionNode(log *logrus.Logger, d *dialer.Dialer) error {
 	m := v.AllSettings()
 	if v.GetString("subscription.link") == "" {
 		// do not cache if config: "cache.subscription.link" is empty
-		log.Traceln("did not cache the node because config: \"cache.subscription.link\" was empty")
+		log.Infoln("did not cache the node because config: \"cache.subscription.link\" was empty")
 		return nil
 	}
-	log.Tracef("cache the node: %v: %v\n", d.Name(), d.Link())
+	log.Infof("cache the node: %v: %v\n", d.Name(), d.Link())
 	if err := config.SetValueHierarchicalMap(m, completeKey("cache.subscription.last_node"), d.Link()); err != nil {
 		return err
 	}
@@ -170,6 +206,41 @@ func firstAvailableDialer(log *logrus.Logger, dialers []*dialer.Dialer) *dialer.
 	return nil
 }
 
+func testLatencies(log *logrus.Logger, dialers []*dialer.Dialer) (result []*DialerWithLatency) {
+	concurrency := make(chan struct{}, 8)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for i := range dialers {
+		wg.Add(1)
+		go func(i int) {
+			d := dialers[i]
+			concurrency <- struct{}{}
+			defer func() {
+				wg.Done()
+				<-concurrency
+			}()
+			t := time.Now()
+			b, _ := d.Test(context.Background())
+			latency := int(time.Since(t).Milliseconds())
+			if !b {
+				latency = -1
+			}
+			mu.Lock()
+			result = append(result, &DialerWithLatency{
+				Dialer:  d,
+				Latency: latency,
+			})
+			if len(result)%10 == 0 && len(result) != len(dialers) {
+				log.Infof("Test nodes: %v/%v", len(result), len(dialers))
+			}
+			mu.Unlock()
+		}(i)
+	}
+	wg.Wait()
+	log.Infof("Test nodes: %v/%v", len(result), len(dialers))
+	return result
+}
+
 func GetDialerFromSubscriptionLastNodeCache(testNode bool) (d *dialer.Dialer) {
 	if config.ParamsObj.Cache.Subscription.LastNode != "" {
 		d, _ := GetDialerFromLink(config.ParamsObj.Cache.Subscription.LastNode, testNode)
@@ -178,4 +249,49 @@ func GetDialerFromSubscriptionLastNodeCache(testNode bool) (d *dialer.Dialer) {
 		}
 	}
 	return nil
+}
+
+func selectNodeFromInput(nodes []*DialerWithLatency) (*DialerWithLatency, error) {
+	sort.Slice(nodes, func(i, j int) bool {
+		vi := nodes[i].Latency
+		vj := nodes[j].Latency
+		if vi == -1 {
+			vi = intsets.MaxInt
+		}
+		if vj == -1 {
+			vj = intsets.MaxInt
+		}
+		return vi < vj
+	})
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . }}",
+		Active:   "🛪 {{ .Dialer.Name | cyan }} ({{ .Latency | red }} ms)",
+		Inactive: "  {{ .Dialer.Name | cyan }} ({{ .Latency | red }} ms)",
+		Selected: "🛪 {{ .Dialer.Name | red | cyan }}",
+		Details: `
+--------- Detail ----------
+{{ "Name:" | faint }}	{{ .Dialer.Name }}
+{{ "Protocol:" | faint }}	{{ .Dialer.Protocol }}
+{{ "Support UDP:" | faint }}	{{ .Dialer.SupportUDP }}
+{{ "Latency:" | faint }}	{{ .Latency }} ms`,
+	}
+	searcher := func(input string, index int) bool {
+		node := nodes[index]
+		name := strings.Replace(strings.ToLower(node.Dialer.Name()), " ", "", -1)
+		input = strings.Replace(strings.ToLower(input), " ", "", -1)
+
+		return strings.Contains(name, input)
+	}
+	prompt := promptui.Select{
+		Label:     "Select Node",
+		Items:     nodes,
+		Templates: templates,
+		Size:      8,
+		Searcher:  searcher,
+	}
+	i, _, err := prompt.Run()
+	if err != nil {
+		return nil, err
+	}
+	return nodes[i], nil
 }

@@ -103,7 +103,7 @@ func (s *HTTP) Dialer() (*dialer.Dialer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return dialer.NewDialer(d, false, s.Name, u.String()), nil
+	return dialer.NewDialer(d, false, s.Name, s.Protocol, u.String()), nil
 }
 
 func (s *HTTP) URL() url.URL {

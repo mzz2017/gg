@@ -60,7 +60,7 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	p.log.Tracef("writeto: %v, %v", targetAddr, data)
+	//p.log.Tracef("writeto: %v, %v", targetAddr, data)
 	if _, err = rc.WriteTo(data, targetAddr); err != nil {
 		return fmt.Errorf("write error: %w", err)
 	}

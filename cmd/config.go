@@ -132,11 +132,11 @@ func getConfig(log *logrus.Logger, bindToConfig bool, newViper func() *viper.Vip
 		}
 		if subscription, _ := flagCmd.PersistentFlags().GetString("subscription"); subscription != "" && subscription != v.Get("subscription.link") {
 			v.Set("subscription.cache_last_node", "false")
+			log.Infoln("subscription.cache_last_node will be disabled because the given subscription link is different from the configured one.")
 		}
 		v.BindPFlag("subscription.link", flagCmd.PersistentFlags().Lookup("subscription"))
 		if ok, _ := flagCmd.PersistentFlags().GetBool("select"); ok {
-			v.Set("subscription.select", "manual")
-			v.Set("subscription.cache_last_node", "false")
+			v.Set("subscription.select", "__select__")
 		}
 	}
 	if bindToConfig {

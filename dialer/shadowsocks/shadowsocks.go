@@ -82,7 +82,7 @@ func (s *Shadowsocks) Dialer() (*dialer.Dialer, error) {
 		}
 		supportUDP = false
 	}
-	return dialer.NewDialer(d, supportUDP, s.Name, s.ExportToURL()), nil
+	return dialer.NewDialer(d, supportUDP, s.Name, s.Protocol, s.ExportToURL()), nil
 }
 
 func ParseClash(o *yaml.Node) (data *Shadowsocks, err error) {

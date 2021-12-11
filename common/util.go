@@ -106,3 +106,10 @@ func SetValue(values *url.Values, key string, value string) {
 	}
 	values.Set(key, value)
 }
+
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}

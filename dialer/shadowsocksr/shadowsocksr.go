@@ -64,7 +64,7 @@ func (s *ShadowsocksR) Dialer() (*dialer.Dialer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return dialer.NewDialer(d, false, s.Name, s.ExportToURL()), nil
+	return dialer.NewDialer(d, false, s.Name, s.Protocol, s.ExportToURL()), nil
 }
 
 func ParseClash(o *yaml.Node) (data *ShadowsocksR, err error) {
