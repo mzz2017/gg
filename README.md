@@ -141,11 +141,24 @@ gg --subscription https://example.com/path/to/sub --select curl ipv4.appspot.com
 ```
 
 > ```
-> Select to connect:
-> [ ] 253ms - Azure US West
-> [x] 51ms - Azure HK
-> [ ] 70ms - xTom IIJ JP
-> 13.141.150.163
+> WARN[0000] Test nodes...
+> Use the arrow keys to navigate: ↓ ↑ → ←  and / toggles search
+> Select Node
+>   🛪 [200Mbps] LoadBalance (323 ms)
+>     [200Mbps] LoadBalance Trojan (448 ms)
+>     [30M] CN2-US Cera (560 ms)
+>     [1Gbps] 4837-US (781 ms)
+>     [10Gbps] CN2-DE (811 ms)
+>     [300Mbps] Macau (1023 ms)
+>     [300Mbps] IPv6 LoadBalance (-1 ms)
+> ↓   [1Gbps] RackNerd (-1 ms)
+>
+> --------- Detail ----------
+> Name:               [200Mbps] LoadBalance
+> Protocol:           shadowsocks
+> Support UDP:        true
+> Latency:            323 ms
+>
 > ```
 
 ### Long-term use
