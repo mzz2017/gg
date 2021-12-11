@@ -1,1 +1,6 @@
-compdef _precommand gg
+#compdef gg
+
+shift words
+(( CURRENT-- ))
+
+_normal -p $service
