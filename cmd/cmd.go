@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/mzz2017/gg/tracer"
 	"github.com/sirupsen/logrus"
@@ -8,7 +10,9 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"os/exec"
+	"os/signal"
 	"runtime"
+	"syscall"
 )
 
 var (
@@ -60,7 +64,10 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			if preserveEnv {
 				env = os.Environ()
 			}
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			t, err := tracer.New(
+				ctx,
 				fullPath,
 				args,
 				&os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}, Env: env},
@@ -71,9 +78,18 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			if err != nil {
 				logrus.Fatal("tracer.New:", err)
 			}
+			go func() {
+				// listen signal
+				sigs := make(chan os.Signal, 1)
+				signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGILL)
+				<-sigs
+				cancel()
+			}()
 			code, err := t.Wait()
 			if err != nil {
-				logrus.Fatal("tracer.Wait:", err)
+				if !errors.Is(err, context.Canceled) {
+					logrus.Fatal("tracer.Wait:", err)
+				}
 			}
 			os.Exit(code)
 		},
