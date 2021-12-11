@@ -212,7 +212,7 @@ gg config node
 
 在 `~/.bashrc` 加上一行：
 ```shell
-complete -F _root_command gg
+complete -F _command gg
 ```
 
 ### zsh
