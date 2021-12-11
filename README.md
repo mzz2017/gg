@@ -217,7 +217,7 @@ If you want to complete other commands while using gg, please follow the method 
 
 Add this line to `~/.bashrc`:
 ```shell
-complete -F _root_command gg
+complete -F _command gg
 ```
 
 ### zsh
