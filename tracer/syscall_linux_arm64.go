@@ -138,10 +138,10 @@ func ptraceSetRegs(pid int, regs *syscall.PtraceRegs) error {
 	if regs.Pstate == ArmRegsFlag {
 		regs := (*PtraceRegsArm)(unsafe.Pointer(regs))
 		iov := getIovec((*byte)(unsafe.Pointer(regs)), int(unsafe.Sizeof(*regs)))
-		return ptrace(syscall.PTRACE_GETREGSET, pid, NT_PRSTATUS, uintptr(unsafe.Pointer(&iov)))
+		return ptrace(syscall.PTRACE_SETREGSET, pid, NT_PRSTATUS, uintptr(unsafe.Pointer(&iov)))
 	}
 	iov := getIovec((*byte)(unsafe.Pointer(regs)), int(unsafe.Sizeof(*regs)))
-	return ptrace(syscall.PTRACE_GETREGSET, pid, NT_PRSTATUS, uintptr(unsafe.Pointer(&iov)))
+	return ptrace(syscall.PTRACE_SETREGSET, pid, NT_PRSTATUS, uintptr(unsafe.Pointer(&iov)))
 }
 
 func ptraceGetRegs(pid int, regs *syscall.PtraceRegs) error {
