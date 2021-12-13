@@ -73,6 +73,9 @@ func New(ctx context.Context, name string, argv []string, attr *os.ProcAttr, dia
 		code, err := t.trace()
 		t.exitCode = code
 		t.exitErr = err
+		if err != nil {
+			t.proc.Kill()
+		}
 		close(t.closed)
 	}()
 	<-done
@@ -118,7 +121,6 @@ func (t *Tracer) trace() (exitCode int, err error) {
 		select {
 		case <-t.ctx.Done():
 			syscall.PtraceDetach(proc)
-			t.proc.Kill()
 			return 1, t.ctx.Err()
 		default:
 		}
@@ -130,7 +132,6 @@ func (t *Tracer) trace() (exitCode int, err error) {
 		select {
 		case <-t.ctx.Done():
 			syscall.PtraceDetach(proc)
-			t.proc.Kill()
 			return 1, t.ctx.Err()
 		default:
 		}
