@@ -51,7 +51,6 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			Protocol: int(args[2]),
 		}
 		t.saveSocketInfo(pid, fd, socketInfo)
-		t.log.Traceln(fd, socketInfo)
 		t.log.Tracef("new socket (%v): pid: %v, fd %v", t.network(&socketInfo), pid, fd)
 	case syscall.SYS_FCNTL:
 		//t.log.Tracef("exitHandler: FCNTL: %v, inst: %v", pid, inst)
@@ -77,6 +76,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			logrus.Tracef("socket error: pid: %v, errno: %v", pid, errno)
 			return nil
 		}
+		t.saveSocketInfo(pid, newFD, *socketInfo)
 		t.log.Tracef("SYS_FCNTL: copy %v -> %v", fd, newFD)
 	case syscall.SYS_CLOSE:
 		//t.log.Tracef("exitHandler: CLOSE: %v, inst: %v", pid, inst)
