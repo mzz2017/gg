@@ -17,6 +17,7 @@ type Proxy struct {
 	mutex        sync.Mutex      // mutex protects the mappers
 	addrMapper   *LoopbackMapper // addrMapper projects an address to a loopback IP
 	domainMapper *ReservedMapper // domainMapper projects a domain to a reserved IP
+	realIPMapper *RealIPMapper   // realIPMapper projects a fake IP to a real IP
 
 	log         *logrus.Logger
 	listener    net.Listener
@@ -32,6 +33,7 @@ func New(logger *logrus.Logger, dialer proxy.Dialer) *Proxy {
 	return &Proxy{
 		addrMapper:   NewLoopbackMapper(),
 		domainMapper: NewReservedMapper(),
+		realIPMapper: NewRealIPMapper(),
 		log:          logger,
 		dialer:       dialer,
 		closed:       make(chan struct{}),
@@ -52,27 +54,20 @@ func (p *Proxy) AllocProjection(target string) (loopback netaddr.IP) {
 	}
 }
 
-func (p *Proxy) GetProjection(loopback netaddr.IP) (target string) {
+func (p *Proxy) GetProjection(ip netaddr.IP) (target string) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
-	if loopback.IsLoopback() {
-		// address
-		//tgt := p.addrMapper.Get(loopback)
-		//tgtHost, _, err := net.SplitHostPort(tgt)
-		//if err != nil {
-		//	return tgt
-		//}
-		//log.Println(tgt, tgtHost)
-		//if tgtIP, err := netaddr.ParseIP(tgtHost); err == nil && ReservedPrefix.Contains(tgtIP) {
-		//	log.Println(p.domainMapper.Get(tgtIP))
-		//	return p.domainMapper.Get(tgtIP)
-		//}
-		//return tgt
-		return p.addrMapper.Get(loopback)
+	if ip.IsLoopback() {
+		// loopback IP -> target address
+		return p.addrMapper.Get(ip)
 	} else {
-		// domain
-		return p.domainMapper.Get(loopback)
+		// reserved IP -> domain
+		return p.domainMapper.Get(ip)
 	}
+}
+
+func (p *Proxy) GetRealIP(fakeIP netaddr.IP) (realIP netaddr.IP, ok bool) {
+	return p.realIPMapper.Get(fakeIP)
 }
 
 // ListenAndServe will block the goroutine.
