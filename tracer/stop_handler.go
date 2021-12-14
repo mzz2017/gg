@@ -47,7 +47,8 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 			Family: int(args[0]),
 			// FIXME: This field may be not so exact. To reproduce: curl -v example.com
 			// 		So the compromise is that TCP and UDP ports to listen at must be the same.
-			Type: int(args[1]),
+			Type:     int(args[1]),
+			Protocol: int(args[2]),
 		}
 		t.saveSocketInfo(pid, fd, socketInfo)
 		t.log.Tracef("new socket (%v): pid: %v, fd %v", t.network(&socketInfo), pid, fd)
@@ -252,25 +253,26 @@ func (t *Tracer) checkSocket(pid int, fd uint64) (socketInfo *SocketMetadata, ex
 		return nil, false
 	}
 	switch socketInfo.Family {
-	case syscall.AF_INET, syscall.AF_INET6:
-		// support only ipv4, and ipv6
-	default:
-		return nil, false
-	}
-	switch {
-	// support only tcp, and udp
-	case socketInfo.Type&syscall.SOCK_STREAM == syscall.SOCK_STREAM:
-	case socketInfo.Type&syscall.SOCK_DGRAM == syscall.SOCK_DGRAM:
+	case syscall.AF_INET:
+	// support only ipv4, and ipv6
+	case syscall.AF_INET6:
+		// only filter tcp and udp traffic for ipv6
+		switch t.network(socketInfo) {
+		case "tcp", "udp":
+		default:
+			// no need to transform the fake IP to real IP
+			return nil, false
+		}
 	default:
 		return nil, false
 	}
 	return socketInfo, true
 }
 func (t *Tracer) portHackTo(socketInfo *SocketMetadata) int {
-	switch {
-	case socketInfo.Type&syscall.SOCK_STREAM == syscall.SOCK_STREAM:
+	switch t.network(socketInfo) {
+	case "tcp":
 		return t.proxy.TCPPort()
-	case socketInfo.Type&syscall.SOCK_DGRAM == syscall.SOCK_DGRAM:
+	case "udp":
 		return t.proxy.UDPPort()
 	default:
 		return 0
@@ -278,14 +280,29 @@ func (t *Tracer) portHackTo(socketInfo *SocketMetadata) int {
 }
 
 func (t *Tracer) network(socketInfo *SocketMetadata) string {
-	switch {
-	case socketInfo.Type&syscall.SOCK_STREAM == syscall.SOCK_STREAM:
-		return "tcp"
-	case socketInfo.Type&syscall.SOCK_DGRAM == syscall.SOCK_DGRAM:
-		return "udp"
-	default:
+	if socketInfo.Family != syscall.AF_INET && socketInfo.Family != syscall.AF_INET6 {
 		return ""
 	}
+	switch {
+	case socketInfo.Type&syscall.SOCK_STREAM == syscall.SOCK_STREAM:
+		switch socketInfo.Protocol {
+		case 0, syscall.IPPROTO_TCP:
+			return "tcp"
+		}
+	case socketInfo.Type&syscall.SOCK_DGRAM == syscall.SOCK_DGRAM:
+		switch socketInfo.Protocol {
+		case 0, syscall.IPPROTO_UDP, syscall.IPPROTO_UDPLITE:
+			return "udp"
+		}
+	case socketInfo.Type&syscall.SOCK_RAW == syscall.SOCK_RAW:
+		switch socketInfo.Protocol {
+		case syscall.IPPROTO_TCP:
+			return "tcp"
+		case syscall.IPPROTO_UDP, syscall.IPPROTO_UDPLITE:
+			return "udp"
+		}
+	}
+	return ""
 }
 
 func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sockAddrToPock []byte, err error) {
@@ -298,7 +315,8 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		// but only keep DNS packets sent to the port 53
 		return nil, nil
 	}
-	if ip := netaddr.IPFrom4(addr.Addr); ip.IsLoopback() && !(network == "udp" && targetPort == 53) {
+	isDNS := network == "udp" && targetPort == 53
+	if ip := netaddr.IPFrom4(addr.Addr); (network == "tcp" || network == "udp") && ip.IsLoopback() && !isDNS {
 		// skip loopback
 		// but only keep DNS packets sent to the port 53
 		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
@@ -306,19 +324,32 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	}
 	//logrus.Traceln("before", bSockAddr)
 	var originAddr string
-	if ip := netaddr.IPFrom4(addr.Addr); proxy.ReservedPrefix.Contains(ip) {
-		originAddr = net.JoinHostPort(
-			t.proxy.GetProjection(ip), // get original domain
-			strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
-		)
-	} else {
+	ip := netaddr.IPFrom4(addr.Addr)
+	if network == "tcp" || network == "udp" {
+		if proxy.ReservedPrefix.Contains(ip) {
+			originAddr = net.JoinHostPort(
+				t.proxy.GetProjection(ip), // get original domain
+				strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
+			)
+		} else {
+			originAddr = net.JoinHostPort(
+				netaddr.IPFrom4(addr.Addr).String(),
+				strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
+			)
+		}
+		loopback := t.proxy.AllocProjection(originAddr)
+		addr.Addr = loopback.As4()
+	} else if proxy.ReservedPrefix.Contains(ip) {
 		originAddr = net.JoinHostPort(
 			netaddr.IPFrom4(addr.Addr).String(),
 			strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
 		)
+
+		if realIp, ok := t.proxy.GetRealIP(ip); ok {
+			addr.Addr = realIp.As4()
+		}
 	}
-	loopback := t.proxy.AllocProjection(originAddr)
-	addr.Addr = loopback.As4()
+
 	binary.BigEndian.PutUint16(addr.Port[:], uint16(portHackTo))
 	//logrus.Traceln("port", addr.Port)
 	_bSockAddrToPock := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
@@ -328,7 +359,7 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	}))
 	bSockAddrToPock := make([]byte, len(_bSockAddrToPock))
 	copy(bSockAddrToPock, _bSockAddrToPock)
-	t.log.Tracef("handleINet4 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(loopback.String(), strconv.Itoa(portHackTo)))
+	t.log.Tracef("handleINet4 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(netaddr.IPFrom4(addr.Addr).String(), strconv.Itoa(portHackTo)))
 	return bSockAddrToPock, nil
 }
 

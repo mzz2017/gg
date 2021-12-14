@@ -5,6 +5,7 @@ import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pool"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/shadowsocks"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/server"
+	"github.com/lixiangzhong/dnsutil"
 	"github.com/mzz2017/gg/infra/ip_mtu_trie"
 	"golang.org/x/net/dns/dnsmessage"
 	"inet.af/netaddr"
@@ -12,6 +13,12 @@ import (
 	"strings"
 	"time"
 )
+
+type HijackResp struct {
+	Resp   []byte
+	Domain string
+	AnsIP  netaddr.IP
+}
 
 func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 	loopback, _ := netaddr.FromStdIP(lAddr.(*net.UDPAddr).IP)
@@ -22,7 +29,18 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 	p.log.Tracef("received udp: %v, tgt: %v", lAddr.String(), tgt)
 	if resp, isDNSQuery := p.hijackDNS(data); isDNSQuery {
 		if resp != nil {
-			_, err = p.udpConn.WriteTo(resp, lAddr)
+			var dig dnsutil.Dig
+			ips, err := dig.A(resp.Domain)
+			if err != nil {
+				return err
+			}
+			if len(ips) == 0 {
+				return fmt.Errorf("no A record")
+			}
+			ip, _ := netaddr.FromStdIP(ips[0].A)
+			p.realIPMapper.Set(resp.AnsIP, ip)
+			p.log.Tracef("fakeIP:(%v) realIP:(%v)", resp.AnsIP, ip)
+			_, err = p.udpConn.WriteTo(resp.Resp, lAddr)
 			return err
 
 			// TODO: try to send from original address if the socket uses bind.
@@ -67,7 +85,7 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 	return nil
 }
 
-func (p *Proxy) hijackDNS(data []byte) (resp []byte, isDNSQuery bool) {
+func (p *Proxy) hijackDNS(data []byte) (resp *HijackResp, isDNSQuery bool) {
 	var dmsg dnsmessage.Message
 	if dmsg.Unpack(data) != nil {
 		return nil, false
@@ -78,13 +96,15 @@ func (p *Proxy) hijackDNS(data []byte) (resp []byte, isDNSQuery bool) {
 	// we only peek the first question.
 	// see https://stackoverflow.com/questions/4082081/requesting-a-and-aaaa-records-in-single-dns-query/4083071#4083071
 	q := dmsg.Questions[0]
-	var strAns string
+	var domain string
+	var ans netaddr.IP
 	switch q.Type {
 	case dnsmessage.TypeAAAA:
-		p.AllocProjection(strings.TrimSuffix(q.Name.String(), "."))
+		domain = strings.TrimSuffix(q.Name.String(), ".")
+		ans = p.AllocProjection(domain)
 	case dnsmessage.TypeA:
-		ans := p.AllocProjection(strings.TrimSuffix(q.Name.String(), "."))
-		strAns = ans.String()
+		domain = strings.TrimSuffix(q.Name.String(), ".")
+		ans = p.AllocProjection(domain)
 		dmsg.Answers = []dnsmessage.Resource{{
 			Header: dnsmessage.ResourceHeader{
 				Name:  q.Name,
@@ -96,14 +116,17 @@ func (p *Proxy) hijackDNS(data []byte) (resp []byte, isDNSQuery bool) {
 	}
 	switch q.Type {
 	case dnsmessage.TypeA, dnsmessage.TypeAAAA:
-		p.log.Tracef("hijackDNS: lookup: %v to %v", q.Name.String(), strAns)
+		p.log.Tracef("hijackDNS: lookup: %v to %v", q.Name.String(), ans.String())
 		dmsg.RCode = dnsmessage.RCodeSuccess
 		dmsg.Response = true
 		dmsg.RecursionAvailable = true
 		dmsg.Truncated = false
 		b, _ := dmsg.Pack()
-		return b, true
-
+		return &HijackResp{
+			b,
+			domain,
+			ans,
+		}, true
 	}
 	return nil, true
 }

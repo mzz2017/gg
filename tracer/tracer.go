@@ -15,6 +15,7 @@ import (
 type SocketMetadata struct {
 	Family int
 	Type   int
+	Protocol int
 }
 
 // Tracer is not thread-safe.
