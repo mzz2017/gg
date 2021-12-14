@@ -5,7 +5,6 @@ import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pool"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/shadowsocks"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/server"
-	"github.com/lixiangzhong/dnsutil"
 	"github.com/mzz2017/gg/infra/ip_mtu_trie"
 	"golang.org/x/net/dns/dnsmessage"
 	"inet.af/netaddr"
@@ -27,45 +26,33 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 		return fmt.Errorf("mapped target address not found")
 	}
 	p.log.Tracef("received udp: %v, tgt: %v", lAddr.String(), tgt)
-	if resp, isDNSQuery := p.hijackDNS(data); isDNSQuery {
-		if resp != nil {
-			var dig dnsutil.Dig
-			ips, err := dig.A(resp.Domain)
+	if hijackResp, isDNSQuery := p.hijackDNS(data); isDNSQuery {
+		if hijackResp != nil {
+			respData, respMsg, err := forwardDNSMessage(tgt, data)
 			if err != nil {
+				return fmt.Errorf("forwardDNSMessage: %w", err)
+			}
+			if len(respMsg.Answers) == 0 {
+				// no answer
+				_, err = p.udpConn.WriteTo(respData, lAddr)
 				return err
 			}
-			if len(ips) == 0 {
-				return fmt.Errorf("no A record")
+			// we only pick the first answer
+			realAns, ok := respMsg.Answers[0].Body.(*dnsmessage.AResource)
+			if !ok {
+				// not a valid answer
+				_, err = p.udpConn.WriteTo(respData, lAddr)
+				return err
 			}
-			ip, _ := netaddr.FromStdIP(ips[0].A)
-			p.realIPMapper.Set(resp.AnsIP, ip)
-			p.log.Tracef("fakeIP:(%v) realIP:(%v)", resp.AnsIP, ip)
-			_, err = p.udpConn.WriteTo(resp.Resp, lAddr)
+			ip := netaddr.IPFrom4(realAns.A)
+			p.realIPMapper.Set(hijackResp.AnsIP, ip)
+			p.log.Tracef("fakeIP:(%v) realIP:(%v)", hijackResp.AnsIP, ip)
+			_, err = p.udpConn.WriteTo(hijackResp.Resp, lAddr)
 			return err
 
 			// TODO: try to send from original address if the socket uses bind.
 			// 		But to archive it, we need bind permission.
 			//		Is it worth it?
-
-			//host, strPort, err := net.SplitHostPort(tgt)
-			//if err != nil {
-			//	return err
-			//}
-			//ip, err := netaddr.ParseIP(host)
-			//if err != nil {
-			//	return err
-			//}
-			//port, err := strconv.Atoi(strPort)
-			//if err != nil {
-			//	return err
-			//}
-			//p.log.Warnf("send from: %v", netaddr.IPPortFrom(ip, uint16(port)))
-			//conn, err := ptrace.NewUDPDialer(netaddr.IPPortFrom(ip, uint16(port)), 10*time.Second, p.log).Dial("udp", lAddr.String())
-			//if err != nil {
-			//	return err
-			//}
-			//_, err = conn.Write(resp)
-			//return err
 		}
 		// continue to request DNS but use replaced DNS server.
 		tgt = "1.1.1.1:53"
@@ -218,48 +205,24 @@ func (p *Proxy) relayUDP(laddr net.Addr, rConn net.PacketConn, timeout time.Dura
 	}
 }
 
-//func NewUDPDialer(laddr netaddr.IPPort, timeout time.Duration, log *logrus.Logger) (dialer *net.Dialer) {
-//	return &net.Dialer{
-//		Timeout: timeout,
-//		Control: func(network, address string, c syscall.RawConn) error {
-//			return c.Control(func(fd uintptr) {
-//				ip := laddr.IP().As4()
-//				if err := BindAddr(fd, ip[:], int(laddr.Port())); err != nil {
-//					if log != nil {
-//						log.Warnf("Strict DNS lookup may fail: %v", err)
-//					}
-//				}
-//			})
-//		},
-//	}
-//}
-//
-//func BindAddr(fd uintptr, ip []byte, port int) error {
-//	if err := syscall.SetsockoptInt(int(fd), syscall.SOL_IP, syscall.IP_TRANSPARENT, 1); err != nil {
-//		return fmt.Errorf("set IP_TRANSPARENT: %w", err)
-//	}
-//	if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1); err != nil {
-//		return fmt.Errorf("set SO_REUSEADDR: %w", err)
-//	}
-//
-//	var sockaddr syscall.Sockaddr
-//
-//	switch len(ip) {
-//	case net.IPv4len:
-//		a4 := &syscall.SockaddrInet4{
-//			Port: port,
-//		}
-//		copy(a4.Addr[:], ip)
-//		sockaddr = a4
-//	case net.IPv6len:
-//		a6 := &syscall.SockaddrInet6{
-//			Port: port,
-//		}
-//		copy(a6.Addr[:], ip)
-//		sockaddr = a6
-//	default:
-//		return fmt.Errorf("unexpected length of ip")
-//	}
-//
-//	return syscall.Bind(int(fd), sockaddr)
-//}
+func forwardDNSMessage(tgt string, msg []byte) ([]byte, *dnsmessage.Message, error) {
+	conn, err := net.Dial("udp", tgt)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = conn.Write(msg)
+	if err != nil {
+		return nil, nil, err
+	}
+	buf := make([]byte, 2+512) // see RFC 1035
+	n, err := conn.Read(buf)
+	if err != nil {
+		return nil, nil, err
+	}
+	var resp dnsmessage.Message
+	if err = resp.Unpack(buf[:n]); err != nil {
+		return nil, nil, err
+	}
+	return buf, &resp, nil
+
+}
