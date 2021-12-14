@@ -317,6 +317,3 @@ complete -c gg -x -a "(__fish_complete_gg_subcommand)"
 - [ ] Quantumult
 - [ ] Quantumult X
 
-## TODO
-
-1. Restore the IP of connect that family is AF_LINKLAYER and others.
