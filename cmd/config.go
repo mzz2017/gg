@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -36,6 +37,7 @@ var (
 					return
 				}
 				// show all config variables
+				sort.Strings(kv)
 				fmt.Println(strings.Join(kv, "\n"))
 				return
 			}
