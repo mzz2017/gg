@@ -16,6 +16,7 @@ import (
 type HijackResp struct {
 	Resp   []byte
 	Domain string
+	Type   dnsmessage.Type
 	AnsIP  netaddr.IP
 }
 
@@ -28,28 +29,34 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 	p.log.Tracef("received udp: %v, tgt: %v", lAddr.String(), tgt)
 	if hijackResp, isDNSQuery := p.hijackDNS(data); isDNSQuery {
 		if hijackResp != nil {
-			respData, respMsg, err := forwardDNSMessage(tgt, data)
-			if err != nil {
-				return fmt.Errorf("forwardDNSMessage: %w", err)
-			}
-			if len(respMsg.Answers) == 0 {
-				// no answer
-				_, err = p.udpConn.WriteTo(respData, lAddr)
+			switch hijackResp.Type {
+			case dnsmessage.TypeAAAA:
+				// TODO: support to restore INET6 ICMP target
+				_, err = p.udpConn.WriteTo(hijackResp.Resp, lAddr)
+				return err
+			case dnsmessage.TypeA:
+				respData, respMsg, err := forwardDNSMessage(tgt, data)
+				if err != nil {
+					return fmt.Errorf("forwardDNSMessage: %w", err)
+				}
+				if len(respMsg.Answers) == 0 {
+					// no answer
+					_, err = p.udpConn.WriteTo(respData, lAddr)
+					return err
+				}
+				// we only pick the first answer
+				realAnsA, okA := respMsg.Answers[0].Body.(*dnsmessage.AResource)
+				if !okA {
+					// not a valid answer
+					_, err = p.udpConn.WriteTo(respData, lAddr)
+					return err
+				}
+				ip := netaddr.IPFrom4(realAnsA.A)
+				p.realIPMapper.Set(hijackResp.AnsIP, ip)
+				p.log.Tracef("fakeIP:(%v) realIP:(%v)", hijackResp.AnsIP, ip)
+				_, err = p.udpConn.WriteTo(hijackResp.Resp, lAddr)
 				return err
 			}
-			// we only pick the first answer
-			realAns, ok := respMsg.Answers[0].Body.(*dnsmessage.AResource)
-			if !ok {
-				// not a valid answer
-				_, err = p.udpConn.WriteTo(respData, lAddr)
-				return err
-			}
-			ip := netaddr.IPFrom4(realAns.A)
-			p.realIPMapper.Set(hijackResp.AnsIP, ip)
-			p.log.Tracef("fakeIP:(%v) realIP:(%v)", hijackResp.AnsIP, ip)
-			_, err = p.udpConn.WriteTo(hijackResp.Resp, lAddr)
-			return err
-
 			// TODO: try to send from original address if the socket uses bind.
 			// 		But to archive it, we need bind permission.
 			//		Is it worth it?
@@ -110,9 +117,10 @@ func (p *Proxy) hijackDNS(data []byte) (resp *HijackResp, isDNSQuery bool) {
 		dmsg.Truncated = false
 		b, _ := dmsg.Pack()
 		return &HijackResp{
-			b,
-			domain,
-			ans,
+			Resp:   b,
+			Domain: domain,
+			Type:   q.Type,
+			AnsIP:  ans,
 		}, true
 	}
 	return nil, true

@@ -83,6 +83,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		// we do not need to know if it succeeded
 		fd := Argument(regs, 0)
 		t.removeSocketInfo(pid, int(fd))
+		t.log.Tracef("close: pid: %v, fd %v", pid, fd)
 	}
 	return nil
 }
@@ -323,7 +324,10 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		return nil, nil
 	}
 	//logrus.Traceln("before", bSockAddr)
-	var originAddr string
+	originAddr := net.JoinHostPort(
+		netaddr.IPFrom4(addr.Addr).String(),
+		strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
+	)
 	ip := netaddr.IPFrom4(addr.Addr)
 	if network == "tcp" || network == "udp" {
 		if proxy.ReservedPrefix.Contains(ip) {
@@ -331,20 +335,10 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 				t.proxy.GetProjection(ip), // get original domain
 				strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
 			)
-		} else {
-			originAddr = net.JoinHostPort(
-				netaddr.IPFrom4(addr.Addr).String(),
-				strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
-			)
 		}
 		loopback := t.proxy.AllocProjection(originAddr)
 		addr.Addr = loopback.As4()
 	} else if proxy.ReservedPrefix.Contains(ip) {
-		originAddr = net.JoinHostPort(
-			netaddr.IPFrom4(addr.Addr).String(),
-			strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
-		)
-
 		if realIp, ok := t.proxy.GetRealIP(ip); ok {
 			addr.Addr = realIp.As4()
 		}
