@@ -67,21 +67,13 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			if !noUDP && !dialer.SupportUDP() {
 				log.Info("Your proxy server does not support UDP, so we will not redirect UDP traffic.")
 			}
-			preserveEnv, err := cmd.Flags().GetBool("preserve-env")
-			if err != nil {
-				logrus.Fatal("GetBool(preserve-env):", err)
-			}
-			var env []string
-			if preserveEnv {
-				env = os.Environ()
-			}
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			t, err := tracer.New(
 				ctx,
 				fullPath,
 				args,
-				&os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}, Env: env},
+				&os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}, Env: os.Environ()},
 				dialer,
 				noUDP,
 				log,
@@ -120,7 +112,6 @@ func init() {
 	rootCmd.PersistentFlags().Bool("noudp", false, "do not redirect UDP traffic, even though the proxy server supports")
 	rootCmd.PersistentFlags().Bool("testnode", true, "test the connectivity before connecting to the node")
 	rootCmd.PersistentFlags().Bool("select", false, "manually select the node to connect from the subscription")
-	rootCmd.PersistentFlags().BoolP("preserve-env", "E", false, "preserve user environment when running command")
 	rootCmd.AddCommand(configCmd)
 }
 
