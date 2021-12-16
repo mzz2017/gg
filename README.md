@@ -79,6 +79,15 @@ Output:
 > Resolving deltas: 100% (7155/7155), done.
 > ```
 
+Or just redirect the traffic of whole shell session to your proxy:
+
+```bash
+gg bash
+
+git clone --depth=1 https://github.com/torvalds/linux.git
+curl ipv4.appspot.com
+```
+
 ### Temporarily use
 
 **Use share-link**

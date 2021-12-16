@@ -74,6 +74,15 @@ gg git clone --depth=1 https://github.com/torvalds/linux.git
 > Resolving deltas: 100% (7155/7155), done.
 > ```
 
+或者直接代理整个 shell session：
+
+```bash
+gg bash
+
+git clone --depth=1 https://github.com/torvalds/linux.git
+curl ipv4.appspot.com
+```
+
 ### 临时使用
 
 **使用节点的分享链接**
