@@ -4,8 +4,9 @@ go 1.17
 
 require (
 	github.com/1lann/promptui v0.0.0-20201231203810-3d80f6bc68f3
+	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v1.1.7
+	github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v1.1.10
 	github.com/fatih/structs v1.1.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/json-iterator/go v1.1.12
@@ -46,13 +47,13 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/lixiangzhong/dnsutil v1.4.0 // indirect
 	github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/miekg/dns v1.1.43 // indirect
+	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
@@ -74,6 +75,7 @@ require (
 	go4.org/intern v0.0.0-20211027215823-ae77deb06f29 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20211027215541-db492cf91b37 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
@@ -82,7 +84,7 @@ require (
 
 //replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => ../BitterJohn
 
-replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211208144700-08dbb6ed94d0
+//replace github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn => github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v0.0.0-20211208144700-08dbb6ed94d0
 
 replace (
 	github.com/spf13/cobra => github.com/mzz2017/cobra v0.0.0-20211205075040-2b7f80d9e0b4

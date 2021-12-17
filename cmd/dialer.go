@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/1lann/promptui"
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/config"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/sirupsen/logrus"
@@ -63,11 +65,11 @@ func GetDialerFromLink(nodeLink string, testNode bool) (d *dialer.Dialer, err er
 }
 
 func GetDialerFromInput(testNode bool) (d *dialer.Dialer, err error) {
-	prompt := promptui.Prompt{
-		Label:       "Enter the share-link of your proxy",
-		HideEntered: true,
-	}
-	link, err := prompt.Run()
+	var link string
+	// FIXME: Is it really necessary to introduce another one library?
+	err = survey.AskOne(&survey.Input{
+		Message: "Enter the share-link of your proxy:",
+	}, &link, common.SetRequire)
 	if err != nil {
 		return nil, err
 	}
