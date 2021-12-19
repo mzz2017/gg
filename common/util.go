@@ -113,3 +113,12 @@ func Max(a, b int) int {
 	}
 	return b
 }
+
+func MustMapKeys(m interface{}) (keys []string) {
+	v := reflect.ValueOf(m)
+	vKeys := v.MapKeys()
+	for _, k := range vKeys {
+		keys = append(keys, k.String())
+	}
+	return keys
+}

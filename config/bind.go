@@ -1,16 +1,12 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/Masterminds/sprig"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/common"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pkg/log"
+	"github.com/mzz2017/gg/common"
 	"github.com/spf13/viper"
 	"reflect"
 	"strconv"
 	"strings"
-	"text/template"
 )
 
 var (
@@ -109,24 +105,7 @@ nextField:
 }
 
 func (b *Binder) bindKey(key string, expr string) (ok bool, err error) {
-	//	support `toml:"port" default:"{{with $arr := split \":\" .john.listen}}{{$arr._1}}{{end}}"`
-	tmpl, err := template.New(key).Funcs(sprig.TxtFuncMap()).Parse(expr)
-	if err != nil {
-		return false, fmt.Errorf("failed to parse default value of key %v: %w", key, err)
-	}
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, b.resolved); err != nil {
-		log.Warn("%v", err)
-		if strings.Contains(err.Error(), "invalid value") {
-			return false, nil
-		}
-		return false, fmt.Errorf("failed to parse default value of key %v: %w", key, err)
-	}
-	if strings.Contains(buf.String(), "<no value>") {
-		log.Warn("%v", buf.String())
-		return false, nil
-	}
-	b.viper.Set(key, buf.String())
+	b.viper.Set(key, expr)
 	return true, nil
 }
 

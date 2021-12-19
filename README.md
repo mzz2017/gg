@@ -230,7 +230,7 @@ gg config node
 2. Q: Can I use it on my IPv6-only machine?
 
    A: Of course, as long as your proxy server has an IPv6 entry.
-3. Q: When I use `gg sudo xxx`, I got `sudo: effective uid is not 0, ...`, how can I fix it?
+3. Q: When I use `gg sudo xxx`, I get `sudo: effective uid is not 0, ...`, how can I fix it?
    
    A: You should run `sudo gg xxx` instead, because `setuid` and `ptrace` can not work together. See [stackoverflow](https://stackoverflow.com/questions/34279612/cannot-strace-sudo-reports-that-effective-uid-is-nonzero).
 

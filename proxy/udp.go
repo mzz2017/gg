@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pool"
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/shadowsocks"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/server"
 	"github.com/mzz2017/gg/infra/ip_mtu_trie"
 	"golang.org/x/net/dns/dnsmessage"
 	"inet.af/netaddr"
 	"net"
 	"strings"
 	"time"
+)
+
+const (
+	DefaultNatTimeout = 3 * time.Minute
+	DnsQueryTimeout   = 17 * time.Second // RFC 5452
 )
 
 type HijackResp struct {
@@ -126,15 +130,24 @@ func (p *Proxy) hijackDNS(data []byte) (resp *HijackResp, isDNSQuery bool) {
 	return nil, true
 }
 
+// SelectTimeout selects an appropriate timeout for UDP packet.
+func SelectTimeout(packet []byte) time.Duration {
+	var dMessage dnsmessage.Message
+	if err := dMessage.Unpack(packet); err != nil {
+		return DefaultNatTimeout
+	}
+	return DnsQueryTimeout
+}
+
 // select an appropriate timeout
 func selectTimeout(packet []byte) time.Duration {
 	al, _ := shadowsocks.BytesSizeForMetadata(packet)
 	if len(packet) < al {
 		// err: packet with inadequate length
-		return server.DefaultNatTimeout
+		return DefaultNatTimeout
 	}
 	packet = packet[al:]
-	return server.SelectTimeout(packet)
+	return SelectTimeout(packet)
 }
 
 // GetOrBuildUDPConn get a UDP conn from the mapping.
@@ -205,7 +218,7 @@ func (p *Proxy) relayUDP(laddr net.Addr, rConn net.PacketConn, timeout time.Dura
 		//if err := dmsg.Unpack(buf[:n]); err == nil {
 		//	p.log.Traceln(dmsg)
 		//}
-		_ = p.udpConn.SetWriteDeadline(time.Now().Add(server.DefaultNatTimeout)) // should keep consistent
+		_ = p.udpConn.SetWriteDeadline(time.Now().Add(DefaultNatTimeout)) // should keep consistent
 		_, err = p.udpConn.WriteTo(buf[:n], laddr)
 		if err != nil {
 			return
