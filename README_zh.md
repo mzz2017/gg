@@ -1,8 +1,6 @@
 # gg (go-graft)
 
-| [English](README.md)     |
-| ------------------------ |
-| [中文简体](README_zh.md) |
+[README](README.md) | [中文文档](README_zh.md)
 
 gg 是一个命令行工具，可在 Linux 环境下对任意命令进行一键代理，而无需安装 v2ray 等其他工具。
 
