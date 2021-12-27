@@ -117,13 +117,17 @@ func init() {
 
 func GetLogger(verbose int) *logrus.Logger {
 	log := logrus.New()
-	log.SetLevel(logrus.WarnLevel)
-	if verbose > 0 {
-		if verbose == 1 {
-			log.SetLevel(logrus.InfoLevel)
-		} else if verbose >=2 {
-			log.SetLevel(logrus.TraceLevel)
-		}
+
+	var level logrus.Level
+	switch verbose {
+	case 0:
+		level = logrus.WarnLevel
+	case 1:
+		level = logrus.InfoLevel
+	default:
+		level = logrus.TraceLevel
 	}
+	log.SetLevel(level)
+
 	return log
 }
