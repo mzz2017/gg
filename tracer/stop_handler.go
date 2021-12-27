@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/mzz2017/gg/proxy"
-	"github.com/sirupsen/logrus"
 	"inet.af/netaddr"
 	"net"
 	"reflect"
@@ -40,7 +39,7 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		}
 		fd, errno := returnValueInt(regs)
 		if errno != 0 {
-			logrus.Infof("socket error: pid: %v, errno: %v", pid, errno)
+			t.log.Infof("socket error: pid: %v, errno: %v", pid, errno)
 			return nil
 		}
 		socketInfo := SocketMetadata{
@@ -68,12 +67,12 @@ func (t *Tracer) exitHandler(pid int, regs *syscall.PtraceRegs) (err error) {
 		fd := args[0]
 		socketInfo := t.getSocketInfo(pid, int(fd))
 		if socketInfo == nil {
-			logrus.Tracef("syscall.F_DUPFD: socketInfo cannot found: pid: %v, fd: %v", pid, fd)
+			t.log.Tracef("syscall.F_DUPFD: socketInfo cannot found: pid: %v, fd: %v", pid, fd)
 			return nil
 		}
 		newFD, errno := returnValueInt(regs)
 		if errno != 0 {
-			logrus.Tracef("socket error: pid: %v, errno: %v", pid, errno)
+			t.log.Tracef("socket error: pid: %v, errno: %v", pid, errno)
 			return nil
 		}
 		t.saveSocketInfo(pid, newFD, *socketInfo)
@@ -250,7 +249,7 @@ func pokeAddrToArgument(pid int, regs *syscall.PtraceRegs, bAddrToPoke []byte, p
 func (t *Tracer) checkSocket(pid int, fd uint64) (socketInfo *SocketMetadata, expected bool) {
 	socketInfo = t.getSocketInfo(pid, int(fd))
 	if socketInfo == nil {
-		logrus.Tracef("socketInfo of socket cannot found: pid: %v, fd: %v", pid, fd)
+		t.log.Tracef("socketInfo of socket cannot found: pid: %v, fd: %v", pid, fd)
 		return nil, false
 	}
 	switch socketInfo.Family {

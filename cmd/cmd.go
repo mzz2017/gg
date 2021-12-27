@@ -121,7 +121,7 @@ func GetLogger(verbose int) *logrus.Logger {
 	if verbose > 0 {
 		if verbose == 1 {
 			log.SetLevel(logrus.InfoLevel)
-		} else {
+		} else if verbose >=2 {
 			log.SetLevel(logrus.TraceLevel)
 		}
 	}
