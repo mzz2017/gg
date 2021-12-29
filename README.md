@@ -233,6 +233,12 @@ gg config node
 3. Q: When I use `gg sudo xxx`, I get `sudo: effective uid is not 0, ...`, how can I fix it?
    
    A: You should run `sudo gg xxx` instead, because `setuid` and `ptrace` can not work together. See [stackoverflow](https://stackoverflow.com/questions/34279612/cannot-strace-sudo-reports-that-effective-uid-is-nonzero).
+4. Q: When I use `oh-my-zsh`, it reports `git: 'gui' is not a git command. See 'git --help'.`, ho can I fix it?
+   
+   A: It is a problem of `oh-my-zsh`, it added an alias from gg to `git gui`. Append following content to `~/.zshrc`:
+   ```bash
+   unalias gg
+   ```
 
 ## Shell autocompletion
 

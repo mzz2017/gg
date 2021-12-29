@@ -223,10 +223,16 @@ gg config node
 2. Q: 我能否在我的 IPv6-only 单栈机器上使用？
 
    A: 当然没有问题，只要你的代理服务器有 IPv6 入口即可。
-3. Q: 当我运行 `gg sudo xxx`, 我得到了一个错误 `sudo: effective uid is not 0, ...` ，怎样解决这个问题？
+3. Q: 当我运行 `gg sudo xxx`，我得到了一个错误 `sudo: effective uid is not 0, ...` ，怎样解决这个问题？
 
-   A: 你应该运行 `sudo gg xxx` ，因为 `setuid` 和 `ptrace` 不能共存。详情见 [stackoverflow](https://stackoverflow.com/questions/34279612/cannot-strace-sudo-reports-that-effective-uid-is-nonzero) 。
- 
+   A: 你应该运行 `sudo gg xxx`，因为 `setuid` 和 `ptrace` 不能共存。详情见 [stackoverflow](https://stackoverflow.com/questions/34279612/cannot-strace-sudo-reports-that-effective-uid-is-nonzero) 。
+4. Q: 我正在使用 `oh-my-zsh`，使用 gg 时我得到一个错误 `git：'gui' 不是一个 git 命令。参见 'git --help'。`，怎样解决这个问题？
+
+   A: It is a problem of `oh-my-zsh`, it added an alias from gg to `git gui`. Append following content to `~/.zshrc`:
+    ```bash
+    unalias gg
+    ```
+
 ## Shell 自动补全
 
 如果您想在使用 gg 的时候能够补全其他命令，请参考以下方法：
