@@ -75,11 +75,12 @@ install() {
   chmod +x "${temp_file}"
   setcap cap_net_raw+ep "${temp_file}" >/dev/null 2>&1 || true
   if [ -w /usr/local/bin/gg ]; then
-    bin_dir=/usr/local/bin/gg
+    bin_dir=/usr/local/bin
   else
-    bin_dir="${HOME}"/.local/bin/gg
+    bin_dir="${HOME}"/.local/bin
   fi
   check_bin_dir "${bin_dir}"
+  mv -f "${temp_file}" "${bin_dir}"/gg
 }
 
 install
