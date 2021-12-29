@@ -45,4 +45,5 @@ set -ex
 
 curl -L "https://hubmirror.v2raya.org/mzz2017/gg/releases/latest/download/gg-${PLATFORM}-${ARCH}" -o /usr/local/bin/gg
 chmod +x /usr/local/bin/gg
+setcap cap_net_raw+ep  /usr/local/bin/gg
 gg --version
