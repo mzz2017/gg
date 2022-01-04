@@ -72,7 +72,6 @@ install() {
 
   temp_file=$(mktemp /tmp/gg.XXXXXXXXX)
   curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-${PLATFORM}-${ARCH}" -o "${temp_file}"
-  chmod +x "${temp_file}"
   setcap cap_net_raw+ep "${temp_file}" >/dev/null 2>&1 || true
   all_user_access=0
   touch /usr/local/bin/gg > /dev/null 2>&1 && all_user_access=1
@@ -83,6 +82,7 @@ install() {
   fi
   check_bin_dir "${bin_dir}"
   mv -f "${temp_file}" "${bin_dir}"/gg
+  chmod 0755 "${bin_dir}"/gg
 }
 
 install
