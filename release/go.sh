@@ -74,7 +74,9 @@ install() {
   curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-${PLATFORM}-${ARCH}" -o "${temp_file}"
   chmod +x "${temp_file}"
   setcap cap_net_raw+ep "${temp_file}" >/dev/null 2>&1 || true
-  if [ -w /usr/local/bin/gg ]; then
+  all_user_access=0
+  touch /usr/local/bin/gg > /dev/null 2>&1 && all_user_access=1
+  if [ "$all_user_access" = 1 ]; then
     bin_dir=/usr/local/bin
   else
     bin_dir="${HOME}"/.local/bin
