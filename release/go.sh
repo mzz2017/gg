@@ -26,7 +26,7 @@ check_bin_dir() {
   fi
 }
 
-install() {
+download_and_install() {
   case "$(uname -s)" in
   Linux)
     PLATFORM='linux'
@@ -71,6 +71,7 @@ install() {
   set -e
 
   temp_file=$(mktemp /tmp/gg.XXXXXXXXX)
+  trap "rm -f '$temp_file'" exit
   curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-${PLATFORM}-${ARCH}" -o "${temp_file}"
   setcap cap_net_raw+ep "${temp_file}" >/dev/null 2>&1 || true
   all_user_access=0
@@ -81,9 +82,8 @@ install() {
     bin_dir="${HOME}"/.local/bin
   fi
   check_bin_dir "${bin_dir}"
-  mv -f "${temp_file}" "${bin_dir}"/gg
-  chmod 0755 "${bin_dir}"/gg
+  install -vDm755 "${temp_file}" "${bin_dir}/gg"
 }
 
-install
+download_and_install
 gg --version
