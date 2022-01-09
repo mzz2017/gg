@@ -73,7 +73,6 @@ download_and_install() {
   temp_file=$(mktemp /tmp/gg.XXXXXXXXX)
   trap "rm -f '$temp_file'" exit
   curl -L "https://github.com/mzz2017/gg/releases/latest/download/gg-${PLATFORM}-${ARCH}" -o "${temp_file}"
-  setcap cap_net_raw+ep "${temp_file}" >/dev/null 2>&1 || true
   all_user_access=0
   touch /usr/local/bin/gg > /dev/null 2>&1 && all_user_access=1
   if [ "$all_user_access" = 1 ]; then
@@ -83,6 +82,7 @@ download_and_install() {
   fi
   check_bin_dir "${bin_dir}"
   install -vDm755 "${temp_file}" "${bin_dir}/gg"
+  setcap cap_net_raw+ep "${bin_dir}/gg" >/dev/null 2>&1 || true
 }
 
 download_and_install
