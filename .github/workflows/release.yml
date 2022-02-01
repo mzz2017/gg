@@ -51,7 +51,18 @@ jobs:
     steps:
       - name: Get the version
         id: get_version
-        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+        run: |
+          if [[ "$REF" == "refs/tags/v"* ]]; then
+            tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+            version=${tag:1}
+          else
+            date=$(git log -1 --format="%cd" --date=short | sed s/-//g)
+            count=$(git rev-list --count HEAD)
+            commit=$(git rev-parse --short HEAD)
+            version="unstable-$date.r${count}.$commit"
+          fi
+          echo ::set-output name=VERSION::"$version"
+          echo "VERSION=$version" >> $GITHUB_ENV
 
       - name: Checkout codebase
         uses: actions/checkout@v2
@@ -76,8 +87,7 @@ jobs:
 
       - name: Build gg
         run: |
-          v=$(echo ${{ steps.get_version.outputs.VERSION }} | cut -c2-)
-          go build -v -o gg-$ASSET_NAME -trimpath -ldflags "-X github.com/mzz2017/gg/cmd.Version=$v -s -w -buildid=" .
+          go build -v -o gg-$ASSET_NAME -trimpath -ldflags "-X github.com/mzz2017/gg/cmd.Version=v${{ steps.get_version.outputs.VERSION }} -s -w -buildid=" .
           upx gg-$ASSET_NAME
 
       - name: Signature
