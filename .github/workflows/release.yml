@@ -60,12 +60,12 @@ jobs:
         run: |
           if [[ "$REF" == "refs/tags/v"* ]]; then
             tag=$(git describe --tags $(git rev-list --tags --max-count=1))
-            version=${tag:1}
+            version=${tag}
           else
             date=$(git log -1 --format="%cd" --date=short | sed s/-//g)
             count=$(git rev-list --count HEAD)
             commit=$(git rev-parse --short HEAD)
-            version="unstable-$date.r${count}.$commit"
+            version="test-$date.r${count}.$commit"
           fi
           echo ::set-output name=VERSION::"$version"
           echo "VERSION=$version" >> $GITHUB_ENV
@@ -88,7 +88,7 @@ jobs:
 
       - name: Build gg
         run: |
-          go build -v -o gg-$ASSET_NAME -trimpath -ldflags "-X github.com/mzz2017/gg/cmd.Version=v${{ steps.get_version.outputs.VERSION }} -s -w -buildid=" .
+          go build -v -o gg-$ASSET_NAME -trimpath -ldflags "-X github.com/mzz2017/gg/cmd.Version=${{ steps.get_version.outputs.VERSION }} -s -w -buildid=" .
           upx gg-$ASSET_NAME
 
       - name: Signature
