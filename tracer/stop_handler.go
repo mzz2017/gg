@@ -281,6 +281,7 @@ func (t *Tracer) portHackTo(socketInfo *SocketMetadata) int {
 
 func (t *Tracer) network(socketInfo *SocketMetadata) string {
 	if socketInfo.Family != syscall.AF_INET && socketInfo.Family != syscall.AF_INET6 {
+		t.log.Tracef("network: unknown: family: %v, type: %v", socketInfo.Family, socketInfo.Type)
 		return ""
 	}
 	switch {
@@ -302,6 +303,7 @@ func (t *Tracer) network(socketInfo *SocketMetadata) string {
 			return "udp"
 		}
 	}
+	t.log.Tracef("network: unknown: family: %v, type: %v", socketInfo.Family, socketInfo.Type)
 	return ""
 }
 
@@ -310,9 +312,15 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	portHackTo := t.portHackTo(socketInfo)
 	addr := *(*RawSockaddrInet4)(unsafe.Pointer(&bSockAddr[0]))
 	targetPort := binary.BigEndian.Uint16(addr.Port[:])
+	if network == "udp" && targetPort == 0 {
+		// skip the usage with sin_port = 0
+		t.log.Tracef("handleINet4 (%v): skip sin_port=0", network)
+		return nil, nil
+	}
 	if network == "udp" && !t.supportUDP && targetPort != 53 {
 		// skip UDP traffic
 		// but only keep DNS packets sent to the port 53
+		t.log.Tracef("handleINet4 (%v): skip UDP", network)
 		return nil, nil
 	}
 	isDNS := network == "udp" && targetPort == 53
@@ -363,6 +371,11 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	addr := *(*RawSockaddrInet6)(unsafe.Pointer(&bSockAddr[0]))
 	targetPort := binary.BigEndian.Uint16(addr.Port[:])
 
+	if network == "udp" && targetPort == 0 {
+		// skip the usage with sin_port = 0
+		t.log.Tracef("handleINet6 (%v): skip sin_port=0", network)
+		return nil, nil
+	}
 	if network == "udp" && !t.supportUDP && targetPort != 53 {
 		// skip UDP traffic
 		// but only keep DNS packets sent to the port 53

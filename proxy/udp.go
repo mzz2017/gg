@@ -45,19 +45,27 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 				}
 				if len(respMsg.Answers) == 0 {
 					// no answer
+					p.log.Tracef("tgt dns response with no answer")
 					_, err = p.udpConn.WriteTo(respData, lAddr)
 					return err
 				}
-				// we only pick the first answer
-				realAnsA, okA := respMsg.Answers[0].Body.(*dnsmessage.AResource)
-				if !okA {
+				// we only pick the first A answer
+				var realAnsA *dnsmessage.AResource
+				for _, ans := range respMsg.Answers {
+					A, okA := ans.Body.(*dnsmessage.AResource)
+					if okA {
+						realAnsA = A
+						break
+					}
+				}
+				if realAnsA == nil {
 					// not a valid answer
-					_, err = p.udpConn.WriteTo(respData, lAddr)
-					return err
+					p.log.Tracef("tgt dns response is not valid: %v", respMsg.Answers)
+				} else {
+					ip := netaddr.IPFrom4(realAnsA.A)
+					p.realIPMapper.Set(hijackResp.AnsIP, ip)
+					p.log.Tracef("fakeIP:(%v) realIP:(%v)", hijackResp.AnsIP, ip)
 				}
-				ip := netaddr.IPFrom4(realAnsA.A)
-				p.realIPMapper.Set(hijackResp.AnsIP, ip)
-				p.log.Tracef("fakeIP:(%v) realIP:(%v)", hijackResp.AnsIP, ip)
 				_, err = p.udpConn.WriteTo(hijackResp.Resp, lAddr)
 				return err
 			}
