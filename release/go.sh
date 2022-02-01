@@ -83,6 +83,8 @@ download_and_install() {
   check_bin_dir "${bin_dir}"
   install -vDm755 "${temp_file}" "${bin_dir}/gg"
   setcap cap_net_raw+ep "${bin_dir}/gg" >/dev/null 2>&1 || true
+  chown root "${bin_dir}/gg" >/dev/null 2>&1 || true
+  chgrp root "${bin_dir}/gg" >/dev/null 2>&1 || true
 }
 
 download_and_install
