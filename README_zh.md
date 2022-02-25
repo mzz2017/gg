@@ -228,7 +228,7 @@ gg config node
    A: 你应该运行 `sudo gg xxx`，因为 `setuid` 和 `ptrace` 不能共存。详情见 [stackoverflow](https://stackoverflow.com/questions/34279612/cannot-strace-sudo-reports-that-effective-uid-is-nonzero) 。
 4. Q: 我正在使用 `oh-my-zsh`，使用 gg 时我得到一个错误 `git：'gui' 不是一个 git 命令。参见 'git --help'。`，怎样解决这个问题？
 
-   A: It is a problem of `oh-my-zsh`, it added an alias from gg to `git gui`. Append following content to `~/.zshrc`:
+   A: 这个问题源于 `oh-my-zsh`，它默认将 gg 别名为了 `git gui`。你可以添加以下内容至 `~/.zshrc`：
     ```bash
     unalias gg
     ```
@@ -304,7 +304,7 @@ complete -c gg -x -a "(__fish_complete_gg_subcommand)"
     - [x] TCP
     - [x] WS
     - [x] TLS
-    - [ ] GRPC
+    - [x] GRPC
 - [x] Shadowsocks
     - [x] AEAD Ciphers
     - [x] simple-obfs (not tested)

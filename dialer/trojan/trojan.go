@@ -5,6 +5,7 @@ import (
 	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
+	"github.com/mzz2017/gg/dialer/transport/grpc"
 	"github.com/mzz2017/gg/dialer/transport/tls"
 	"github.com/mzz2017/gg/dialer/transport/ws"
 	"gopkg.in/yaml.v3"
@@ -30,6 +31,7 @@ type Trojan struct {
 	Encryption    string `json:"encryption"`
 	Host          string `json:"host"`
 	Path          string `json:"path"`
+	ServiceName   string `json:"serviceName"`
 	AllowInsecure bool   `json:"allowInsecure"`
 	Protocol      string `json:"protocol"`
 }
@@ -60,34 +62,52 @@ func (s *Trojan) Dialer() (*dialer.Dialer, error) {
 		}.Encode(),
 	}
 	var err error
-	if d, err = tls.NewTls(u.String(), d); err != nil {
-		return nil, err
-	}
-	if s.Protocol == "trojan-go" {
-		// "tls,ws,ss,trojanc"
-		if s.Type == "ws" {
-			u = url.URL{
-				Scheme: "ws",
-				Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
-				RawQuery: url.Values{
-					"host": []string{s.Host},
-					"path": []string{s.Path},
-				}.Encode(),
-			}
-			if d, err = ws.NewWs(u.String(), d); err != nil {
-				return nil, err
-			}
+	if s.Type != "grpc" {
+		// grpc contains tls
+		if d, err = tls.NewTls(u.String(), d); err != nil {
+			return nil, err
 		}
-		if strings.HasPrefix(s.Encryption, "ss;") {
-			fields := strings.SplitN(s.Encryption, ";", 3)
-			if d, err = protocol.NewDialer("shadowsocks", d, protocol.Header{
-				ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
-				Cipher:       fields[1],
-				Password:     fields[2],
-				IsClient:     false,
-			}); err != nil {
-				return nil, err
-			}
+	}
+	// "tls,ws,ss,trojanc"
+	switch s.Type {
+	case "ws":
+		u = url.URL{
+			Scheme: "ws",
+			Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+			RawQuery: url.Values{
+				"host": []string{s.Host},
+				"path": []string{s.Path},
+			}.Encode(),
+		}
+		if d, err = ws.NewWs(u.String(), d); err != nil {
+			return nil, err
+		}
+	case "grpc":
+		serviceName := s.ServiceName
+		if serviceName == "" {
+			serviceName = "GunService"
+		}
+		u := url.URL{
+			Scheme: "grpc",
+			Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+			RawQuery: url.Values{
+				"sni":         []string{s.Sni},
+				"serviceName": []string{serviceName},
+			}.Encode(),
+		}
+		if d, err = grpc.NewGrpc(u.String(), d); err != nil {
+			return nil, err
+		}
+	}
+	if strings.HasPrefix(s.Encryption, "ss;") {
+		fields := strings.SplitN(s.Encryption, ";", 3)
+		if d, err = protocol.NewDialer("shadowsocks", d, protocol.Header{
+			ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+			Cipher:       fields[1],
+			Password:     fields[2],
+			IsClient:     false,
+		}); err != nil {
+			return nil, err
 		}
 	}
 	if d, err = protocol.NewDialer("trojanc", d, protocol.Header{
@@ -128,12 +148,19 @@ func ParseTrojanURL(u string) (data *Trojan, err error) {
 		AllowInsecure: allowInsecure == "1" || allowInsecure == "true",
 		Protocol:      "trojan",
 	}
+	if t.Query().Get("type") != "" {
+		t.Scheme = "trojan-go"
+	}
 	if t.Scheme == "trojan-go" {
 		data.Protocol = "trojan-go"
 		data.Encryption = t.Query().Get("encryption")
 		data.Host = t.Query().Get("host")
 		data.Path = t.Query().Get("path")
 		data.Type = t.Query().Get("type")
+		data.ServiceName = t.Query().Get("serviceName")
+		if data.Type == "grpc" && data.ServiceName == "" {
+			data.ServiceName = data.Path
+		}
 		data.AllowInsecure = false
 	}
 	return data, nil
@@ -146,6 +173,9 @@ func ParseClash(o *yaml.Node) (data *Trojan, err error) {
 		MaxEarlyData        int               `yaml:"max-early-data,omitempty"`
 		EarlyDataHeaderName string            `yaml:"early-data-header-name,omitempty"`
 	}
+	type GrpcOptions struct {
+		GrpcServiceName string `proxy:"grpc-service-name,omitempty"`
+	}
 	type TrojanOption struct {
 		Name           string      `yaml:"name"`
 		Server         string      `yaml:"server"`
@@ -156,7 +186,7 @@ func ParseClash(o *yaml.Node) (data *Trojan, err error) {
 		SkipCertVerify bool        `yaml:"skip-cert-verify,omitempty"`
 		UDP            bool        `yaml:"udp,omitempty"`
 		Network        string      `yaml:"network,omitempty"`
-		GrpcOpts       interface{} `yaml:"grpc-opts,omitempty"` //TODO
+		GrpcOpts       GrpcOptions `yaml:"grpc-opts,omitempty"`
 		WSOpts         WSOptions   `yaml:"ws-opts,omitempty"`
 	}
 	var option TrojanOption
@@ -178,6 +208,7 @@ func ParseClash(o *yaml.Node) (data *Trojan, err error) {
 		Host:          option.WSOpts.Headers["Host"],
 		Path:          option.WSOpts.Path,
 		AllowInsecure: option.SkipCertVerify,
+		ServiceName:   option.GrpcOpts.GrpcServiceName,
 		Protocol:      proto,
 	}, nil
 }

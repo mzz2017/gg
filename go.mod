@@ -3,6 +3,7 @@ module github.com/mzz2017/gg
 go 1.17
 
 require (
+	ekyu.moe/leb128 v0.0.0-20190626180622-d3722dc409a8
 	github.com/1lann/promptui v0.0.0-20201231203810-3d80f6bc68f3
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn v1.1.10

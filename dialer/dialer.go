@@ -57,7 +57,7 @@ func (d *Dialer) Test(ctx context.Context) (bool, error) {
 		Transport: &http.Transport{
 			DialContext: cd.DialContext,
 		},
-		Timeout: 5 * time.Second,
+		Timeout: 15 * time.Second,
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://fonts.gstatic.com/generate_204", nil)
 	if err != nil {

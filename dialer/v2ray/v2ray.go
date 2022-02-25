@@ -7,6 +7,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
+	"github.com/mzz2017/gg/dialer/transport/grpc"
 	"github.com/mzz2017/gg/dialer/transport/tls"
 	"github.com/mzz2017/gg/dialer/transport/ws"
 	"gopkg.in/yaml.v3"
@@ -124,6 +125,27 @@ func (s *V2Ray) Dialer() (data *dialer.Dialer, err error) {
 		if s.Type != "none" && s.Type != "" {
 			return nil, fmt.Errorf("%w: type: %v", dialer.UnexpectedFieldErr, s.Type)
 		}
+	case "grpc":
+		sni := s.SNI
+		if sni == "" {
+			sni = s.Host
+		}
+		serviceName := s.Path
+		if serviceName == "" {
+			serviceName = "GunService"
+		}
+		u := url.URL{
+			Scheme: "grpc",
+			Host:   net.JoinHostPort(s.Add, s.Port),
+			RawQuery: url.Values{
+				"sni":         []string{sni},
+				"serviceName": []string{serviceName},
+			}.Encode(),
+		}
+		d, err = grpc.NewGrpc(u.String(), d)
+		if err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("%w: network: %v", dialer.UnexpectedFieldErr, s.Net)
 	}
@@ -146,39 +168,56 @@ func ParseClashVMess(o *yaml.Node) (data *V2Ray, err error) {
 		MaxEarlyData        int               `yaml:"max-early-data,omitempty"`
 		EarlyDataHeaderName string            `yaml:"early-data-header-name,omitempty"`
 	}
+	type GrpcOptions struct {
+		GrpcServiceName string `proxy:"grpc-service-name,omitempty"`
+	}
+	type HTTP2Options struct {
+		Host []string `proxy:"host,omitempty"`
+		Path string   `proxy:"path,omitempty"`
+	}
 	type VmessOption struct {
-		Name           string      `yaml:"name"`
-		Server         string      `yaml:"server"`
-		Port           int         `yaml:"port"`
-		UUID           string      `yaml:"uuid"`
-		AlterID        int         `yaml:"alterId"`
-		Cipher         string      `yaml:"cipher"`
-		UDP            bool        `yaml:"udp,omitempty"`
-		Network        string      `yaml:"network,omitempty"`
-		TLS            bool        `yaml:"tls,omitempty"`
-		SkipCertVerify bool        `yaml:"skip-cert-verify,omitempty"`
-		ServerName     string      `yaml:"servername,omitempty"`
-		HTTPOpts       interface{} `yaml:"http-opts,omitempty"`
-		HTTP2Opts      interface{} `yaml:"h2-opts,omitempty"`
-		GrpcOpts       interface{} `yaml:"grpc-opts,omitempty"`
-		WSOpts         WSOptions   `yaml:"ws-opts,omitempty"`
-
-		// TODO: remove these until 2022
-		WSHeaders map[string]string `yaml:"ws-headers,omitempty"`
-		WSPath    string            `yaml:"ws-path,omitempty"`
+		Name           string       `yaml:"name"`
+		Server         string       `yaml:"server"`
+		Port           int          `yaml:"port"`
+		UUID           string       `yaml:"uuid"`
+		AlterID        int          `yaml:"alterId"`
+		Cipher         string       `yaml:"cipher"`
+		UDP            bool         `yaml:"udp,omitempty"`
+		Network        string       `yaml:"network,omitempty"`
+		TLS            bool         `yaml:"tls,omitempty"`
+		SkipCertVerify bool         `yaml:"skip-cert-verify,omitempty"`
+		ServerName     string       `yaml:"servername,omitempty"`
+		HTTPOpts       interface{}  `yaml:"http-opts,omitempty"`
+		HTTP2Opts      HTTP2Options `yaml:"h2-opts,omitempty"`
+		GrpcOpts       GrpcOptions  `yaml:"grpc-opts,omitempty"`
+		WSOpts         WSOptions    `yaml:"ws-opts,omitempty"`
 	}
 	var option VmessOption
 	if err = o.Decode(&option); err != nil {
 		return nil, err
 	}
-	if option.WSOpts.Path != "" {
-		option.WSPath = option.WSOpts.Path
-	}
-	if len(option.WSOpts.Headers) != 0 {
-		option.WSHeaders = option.WSOpts.Headers
-	}
+
 	if option.Network == "" {
 		option.Network = "tcp"
+	}
+	var (
+		path string
+		host string
+		alpn string
+	)
+	switch option.Network {
+	case "ws":
+		path = option.WSOpts.Path
+		host = option.WSOpts.Headers["Host"]
+		alpn = "http/1.1"
+	case "grpc":
+		path = option.GrpcOpts.GrpcServiceName
+	case "h2":
+		host = strings.Join(option.HTTP2Opts.Host, ",")
+		path = option.HTTP2Opts.Path
+		alpn = "h2"
+	case "http":
+		// TODO
 	}
 	s := &V2Ray{
 		Ps:            option.Name,
@@ -188,10 +227,11 @@ func ParseClashVMess(o *yaml.Node) (data *V2Ray, err error) {
 		Aid:           strconv.Itoa(option.AlterID),
 		Net:           option.Network,
 		Type:          "none", // FIXME
-		Host:          option.WSHeaders["Host"],
+		Host:          host,
 		SNI:           option.ServerName,
-		Path:          option.WSPath,
+		Path:          path,
 		AllowInsecure: false,
+		Alpn:          alpn,
 		V:             "2",
 		Protocol:      "vmess",
 	}
