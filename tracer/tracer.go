@@ -13,8 +13,8 @@ import (
 )
 
 type SocketMetadata struct {
-	Family int
-	Type   int
+	Family   int
+	Type     int
 	Protocol int
 }
 
@@ -51,6 +51,9 @@ func New(ctx context.Context, name string, argv []string, attr *os.ProcAttr, dia
 			close(t.closed)
 		}
 	}()
+	// waiting for listening
+	time.Sleep(100 * time.Millisecond)
+
 	done := make(chan struct{})
 	go func() {
 		runtime.LockOSThread()
