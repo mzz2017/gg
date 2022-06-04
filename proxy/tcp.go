@@ -14,7 +14,7 @@ func (p *Proxy) handleTCP(conn net.Conn) error {
 	loopback, _ := netip.AddrFromSlice(conn.LocalAddr().(*net.TCPAddr).IP)
 	tgt := p.GetProjection(loopback)
 	if tgt == "" {
-		return fmt.Errorf("mapped target address not found")
+		return fmt.Errorf("mapped target address not found: %v", loopback)
 	}
 	p.log.Tracef("received tcp: %v, tgt: %v", conn.RemoteAddr().String(), tgt)
 	c, err := p.dialer.Dial("tcp", tgt)

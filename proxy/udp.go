@@ -28,7 +28,7 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 	loopback, _ := netip.AddrFromSlice(lAddr.(*net.UDPAddr).IP)
 	tgt := p.GetProjection(loopback)
 	if tgt == "" {
-		return fmt.Errorf("mapped target address not found")
+		return fmt.Errorf("mapped target address not found: %v", loopback)
 	}
 	p.log.Tracef("received udp: %v, tgt: %v", lAddr.String(), tgt)
 	if hijackResp, isDNSQuery := p.hijackDNS(data); isDNSQuery {

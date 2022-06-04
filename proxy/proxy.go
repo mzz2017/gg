@@ -57,6 +57,9 @@ func (p *Proxy) AllocProjection(target string) (loopback netip.Addr) {
 func (p *Proxy) GetProjection(ip netip.Addr) (target string) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
+	if ip.Is4In6() {
+		ip = netip.AddrFrom4(ip.As4())
+	}
 	if ip.IsLoopback() {
 		// loopback IP -> target address
 		return p.addrMapper.Get(ip)
