@@ -2,7 +2,7 @@ package proxy
 
 import (
 	"errors"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pool"
+	"github.com/mzz2017/softwind/pool"
 	"github.com/mzz2017/gg/infra/ip_mtu_trie"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/proxy"

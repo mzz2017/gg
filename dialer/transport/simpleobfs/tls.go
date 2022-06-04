@@ -5,7 +5,7 @@ package simpleobfs
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pkg/fastrand"
+	"github.com/mzz2017/softwind/pkg/fastrand"
 	"io"
 	"net"
 	"time"

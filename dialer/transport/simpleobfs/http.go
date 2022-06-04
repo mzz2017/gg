@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pool"
+	"github.com/mzz2017/softwind/pool"
 	"io"
 	"math/rand"
 	"net"

@@ -3,7 +3,7 @@ package proxy
 import (
 	"errors"
 	"fmt"
-	io2 "github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/pkg/zeroalloc/io"
+	io2 "github.com/mzz2017/softwind/pkg/zeroalloc/io"
 	"inet.af/netaddr"
 	"net"
 	"time"

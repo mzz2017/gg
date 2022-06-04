@@ -3,13 +3,13 @@ package v2ray
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
-	"github.com/mzz2017/gg/dialer/transport/grpc"
 	"github.com/mzz2017/gg/dialer/transport/tls"
 	"github.com/mzz2017/gg/dialer/transport/ws"
+	"github.com/mzz2017/softwind/protocol"
+	"github.com/mzz2017/softwind/transport/grpc"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -134,17 +134,10 @@ func (s *V2Ray) Dialer() (data *dialer.Dialer, err error) {
 		if serviceName == "" {
 			serviceName = "GunService"
 		}
-		u := url.URL{
-			Scheme: "grpc",
-			Host:   net.JoinHostPort(s.Add, s.Port),
-			RawQuery: url.Values{
-				"sni":         []string{sni},
-				"serviceName": []string{serviceName},
-			}.Encode(),
-		}
-		d, err = grpc.NewGrpc(u.String(), d)
-		if err != nil {
-			return nil, err
+		d = &grpc.Dialer{
+			NextDialer:  &protocol.DialerConverter{Dialer: d},
+			ServiceName: serviceName,
+			ServerName:  sni,
 		}
 	default:
 		return nil, fmt.Errorf("%w: network: %v", dialer.UnexpectedFieldErr, s.Net)

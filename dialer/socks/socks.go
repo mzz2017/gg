@@ -3,7 +3,9 @@ package socks
 import (
 	"fmt"
 	"github.com/mzz2017/gg/dialer"
-	"github.com/mzz2017/gg/dialer/socks/infra"
+	"github.com/nadoo/glider/proxy"
+	"github.com/nadoo/glider/proxy/socks4"
+	"github.com/nadoo/glider/proxy/socks5"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -45,7 +47,22 @@ func NewSocks5FromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
 
 func (s *Socks) Dialer() (*dialer.Dialer, error) {
 	link := s.ExportToURL()
-	return dialer.NewDialer(infra.NewDialer(link), false, s.Name, s.Protocol, link), nil
+	switch s.Protocol {
+	case "", "socks", "socks5":
+		d, err := socks5.NewSocks5Dialer(link, &proxy.Direct{})
+		if err != nil {
+			return nil, err
+		}
+		return dialer.NewDialer(d, true, s.Name, s.Protocol, link), nil
+	case "socks4", "socks4a":
+		d, err := socks4.NewSocks4Dialer(link, &proxy.Direct{})
+		if err != nil {
+			return nil, err
+		}
+		return dialer.NewDialer(d, false, s.Name, s.Protocol, link), nil
+	default:
+		return nil, fmt.Errorf("unexpected protocol: %v", s.Protocol)
+	}
 }
 
 func ParseClashSocks5(o *yaml.Node) (data *Socks, err error) {

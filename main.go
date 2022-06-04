@@ -1,10 +1,10 @@
 package main
 
 import (
-	_ "github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/shadowsocks"
-	_ "github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/trojanc"
-	_ "github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/vless"
-	_ "github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/vmess"
+	_ "github.com/mzz2017/softwind/protocol/shadowsocks"
+	_ "github.com/mzz2017/softwind/protocol/trojanc"
+	_ "github.com/mzz2017/softwind/protocol/vless"
+	_ "github.com/mzz2017/softwind/protocol/vmess"
 
 	_ "github.com/mzz2017/gg/dialer/http"
 	_ "github.com/mzz2017/gg/dialer/shadowsocks"

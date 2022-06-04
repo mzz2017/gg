@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol/http"
+	"github.com/mzz2017/softwind/protocol/http"
 	"github.com/mzz2017/gg/dialer"
 	"gopkg.in/yaml.v3"
 	"net"

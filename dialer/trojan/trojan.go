@@ -2,12 +2,12 @@ package trojan
 
 import (
 	"fmt"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
-	"github.com/mzz2017/gg/dialer/transport/grpc"
 	"github.com/mzz2017/gg/dialer/transport/tls"
 	"github.com/mzz2017/gg/dialer/transport/ws"
+	"github.com/mzz2017/softwind/protocol"
+	"github.com/mzz2017/softwind/transport/grpc"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -87,16 +87,10 @@ func (s *Trojan) Dialer() (*dialer.Dialer, error) {
 		if serviceName == "" {
 			serviceName = "GunService"
 		}
-		u := url.URL{
-			Scheme: "grpc",
-			Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
-			RawQuery: url.Values{
-				"sni":         []string{s.Sni},
-				"serviceName": []string{serviceName},
-			}.Encode(),
-		}
-		if d, err = grpc.NewGrpc(u.String(), d); err != nil {
-			return nil, err
+		d = &grpc.Dialer{
+			NextDialer:  &protocol.DialerConverter{Dialer: d},
+			ServiceName: serviceName,
+			ServerName:  s.Sni,
 		}
 	}
 	if strings.HasPrefix(s.Encryption, "ss;") {

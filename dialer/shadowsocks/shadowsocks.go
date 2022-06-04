@@ -3,7 +3,7 @@ package shadowsocks
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/e14914c0-6759-480d-be89-66b7b7676451/BitterJohn/protocol"
+	"github.com/mzz2017/softwind/protocol"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/dialer/transport/simpleobfs"
