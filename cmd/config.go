@@ -27,6 +27,12 @@ var (
 				kv := common.ObjectToKV(config.ParamsObj, "mapstructure")
 				if len(args) != 0 {
 					keySetToFind := common.StringsMapToSet(args, completeKey)
+					for _, arg := range args {
+						if strings.Contains(arg, "=") {
+							logrus.Warnf("Did you forget to add '-w'?")
+							break
+						}
+					}
 					// show config variable
 					for i := range kv {
 						fields := strings.SplitN(kv[i], "=", 2)
