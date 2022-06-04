@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 	io2 "github.com/mzz2017/softwind/pkg/zeroalloc/io"
-	"inet.af/netaddr"
 	"net"
+	"net/netip"
 	"time"
 )
 
 func (p *Proxy) handleTCP(conn net.Conn) error {
 	defer conn.Close()
-	loopback, _ := netaddr.FromStdIP(conn.LocalAddr().(*net.TCPAddr).IP)
+	loopback, _ := netip.AddrFromSlice(conn.LocalAddr().(*net.TCPAddr).IP)
 	tgt := p.GetProjection(loopback)
 	if tgt == "" {
 		return fmt.Errorf("mapped target address not found")

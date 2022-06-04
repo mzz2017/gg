@@ -6,6 +6,7 @@ import (
 	"github.com/mzz2017/gg/proxy"
 	"inet.af/netaddr"
 	"net"
+	"net/netip"
 	"reflect"
 	"strconv"
 	"syscall"
@@ -324,18 +325,18 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		return nil, nil
 	}
 	isDNS := network == "udp" && targetPort == 53
-	if ip := netaddr.IPFrom4(addr.Addr); (network == "tcp" || network == "udp") && ip.IsLoopback() && !isDNS {
+	if ip := netip.AddrFrom4(addr.Addr); (network == "tcp" || network == "udp") && ip.IsLoopback() && !isDNS {
 		// skip loopback
 		// but only keep DNS packets sent to the port 53
-		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
+		t.log.Tracef("skip loopback: %v", netip.AddrPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
 	}
 	//logrus.Traceln("before", bSockAddr)
 	originAddr := net.JoinHostPort(
-		netaddr.IPFrom4(addr.Addr).String(),
+		netip.AddrFrom4(addr.Addr).String(),
 		strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
 	)
-	ip := netaddr.IPFrom4(addr.Addr)
+	ip := netip.AddrFrom4(addr.Addr)
 	if network == "tcp" || network == "udp" {
 		if proxy.ReservedPrefix.Contains(ip) {
 			originAddr = net.JoinHostPort(
@@ -360,7 +361,7 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 	}))
 	bSockAddrToPock := make([]byte, len(_bSockAddrToPock))
 	copy(bSockAddrToPock, _bSockAddrToPock)
-	t.log.Tracef("handleINet4 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(netaddr.IPFrom4(addr.Addr).String(), strconv.Itoa(portHackTo)))
+	t.log.Tracef("handleINet4 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(netip.AddrFrom4(addr.Addr).String(), strconv.Itoa(portHackTo)))
 	return bSockAddrToPock, nil
 }
 
@@ -381,14 +382,14 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		// but only keep DNS packets sent to the port 53
 		return nil, nil
 	}
-	ip := netaddr.IPFrom16(addr.Addr)
-	if ip.Is4in6() {
-		ip = netaddr.IPFrom4(ip.As4())
+	ip := netip.AddrFrom16(addr.Addr)
+	if ip.Is4In6() {
+		ip = netip.AddrFrom4(ip.As4())
 	}
 	if ip.IsLoopback() && !(network == "udp" && targetPort == 53) {
 		// skip loopback
 		// but only keep DNS packets sent to the port 53
-		t.log.Tracef("skip loopback: %v", netaddr.IPPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
+		t.log.Tracef("skip loopback: %v", netip.AddrPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
 	}
 	var originAddr string
@@ -399,7 +400,7 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		)
 	} else {
 		originAddr = net.JoinHostPort(
-			netaddr.IPFrom16(addr.Addr).String(),
+			netip.AddrFrom16(addr.Addr).String(),
 			strconv.Itoa(int(binary.BigEndian.Uint16(addr.Port[:]))),
 		)
 	}

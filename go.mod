@@ -1,6 +1,6 @@
 module github.com/mzz2017/gg
 
-go 1.17
+go 1.18
 
 require (
 	github.com/1lann/promptui v0.0.0-20201231203810-3d80f6bc68f3

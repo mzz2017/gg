@@ -2,12 +2,12 @@ package proxy
 
 import (
 	"errors"
-	"github.com/mzz2017/softwind/pool"
 	"github.com/mzz2017/gg/infra/ip_mtu_trie"
+	"github.com/mzz2017/softwind/pool"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/proxy"
-	"inet.af/netaddr"
 	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 	"sync"
@@ -42,7 +42,7 @@ func New(logger *logrus.Logger, dialer proxy.Dialer) *Proxy {
 	}
 }
 
-func (p *Proxy) AllocProjection(target string) (loopback netaddr.IP) {
+func (p *Proxy) AllocProjection(target string) (loopback netip.Addr) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	if strings.Contains(target, ":") {
@@ -54,7 +54,7 @@ func (p *Proxy) AllocProjection(target string) (loopback netaddr.IP) {
 	}
 }
 
-func (p *Proxy) GetProjection(ip netaddr.IP) (target string) {
+func (p *Proxy) GetProjection(ip netip.Addr) (target string) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	if ip.IsLoopback() {
@@ -66,7 +66,7 @@ func (p *Proxy) GetProjection(ip netaddr.IP) (target string) {
 	}
 }
 
-func (p *Proxy) GetRealIP(fakeIP netaddr.IP) (realIP netaddr.IP, ok bool) {
+func (p *Proxy) GetRealIP(fakeIP netip.Addr) (realIP netip.Addr, ok bool) {
 	return p.realIPMapper.Get(fakeIP)
 }
 

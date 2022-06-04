@@ -6,8 +6,8 @@ import (
 	"github.com/mzz2017/softwind/pool"
 	"github.com/mzz2017/softwind/protocol/shadowsocks"
 	"golang.org/x/net/dns/dnsmessage"
-	"inet.af/netaddr"
 	"net"
+	"net/netip"
 	"strings"
 	"time"
 )
@@ -21,11 +21,11 @@ type HijackResp struct {
 	Resp   []byte
 	Domain string
 	Type   dnsmessage.Type
-	AnsIP  netaddr.IP
+	AnsIP  netip.Addr
 }
 
 func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
-	loopback, _ := netaddr.FromStdIP(lAddr.(*net.UDPAddr).IP)
+	loopback, _ := netip.AddrFromSlice(lAddr.(*net.UDPAddr).IP)
 	tgt := p.GetProjection(loopback)
 	if tgt == "" {
 		return fmt.Errorf("mapped target address not found")
@@ -62,7 +62,7 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 					// not a valid answer
 					p.log.Tracef("tgt dns response is not valid: %v", respMsg.Answers)
 				} else {
-					ip := netaddr.IPFrom4(realAnsA.A)
+					ip := netip.AddrFrom4(realAnsA.A)
 					p.realIPMapper.Set(hijackResp.AnsIP, ip)
 					p.log.Tracef("fakeIP:(%v) realIP:(%v)", hijackResp.AnsIP, ip)
 				}
@@ -103,7 +103,7 @@ func (p *Proxy) hijackDNS(data []byte) (resp *HijackResp, isDNSQuery bool) {
 	// see https://stackoverflow.com/questions/4082081/requesting-a-and-aaaa-records-in-single-dns-query/4083071#4083071
 	q := dmsg.Questions[0]
 	var domain string
-	var ans netaddr.IP
+	var ans netip.Addr
 	switch q.Type {
 	case dnsmessage.TypeAAAA:
 		domain = strings.TrimSuffix(q.Name.String(), ".")
