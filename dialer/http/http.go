@@ -2,8 +2,8 @@ package http
 
 import (
 	"fmt"
-	"github.com/mzz2017/softwind/protocol/http"
 	"github.com/mzz2017/gg/dialer"
+	"github.com/mzz2017/softwind/protocol/http"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -29,7 +29,7 @@ type HTTP struct {
 func NewHTTP(link string) (*dialer.Dialer, error) {
 	s, err := ParseHTTPURL(link)
 	if err != nil {
-		return nil, dialer.InvalidParameterErr
+		return nil, fmt.Errorf("%w: %v", dialer.InvalidParameterErr, err)
 	}
 	return s.Dialer()
 }
@@ -45,13 +45,20 @@ func NewSocks5FromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
 func ParseHTTPURL(link string) (data *HTTP, err error) {
 	u, err := url.Parse(link)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
-		return nil, dialer.InvalidParameterErr
+		return nil, fmt.Errorf("%w: %v", dialer.InvalidParameterErr, err)
 	}
 	pwd, _ := u.User.Password()
 	strPort := u.Port()
+	if strPort == "" {
+		if u.Scheme == "http" {
+			strPort = "80"
+		} else if u.Scheme == "https" {
+			strPort = "443"
+		}
+	}
 	port, err := strconv.Atoi(strPort)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error when parsing port: %w", err)
 	}
 	return &HTTP{
 		Name:     u.Fragment,
