@@ -3,10 +3,11 @@ package shadowsocks
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/mzz2017/softwind/protocol"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/dialer/transport/simpleobfs"
+	"github.com/mzz2017/softwind/protocol"
+	"github.com/mzz2017/softwind/protocol/shadowsocks"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -15,6 +16,9 @@ import (
 )
 
 func init() {
+	// Use random salt by default to decrease the boot time
+	shadowsocks.DefaultSaltGeneratorType = shadowsocks.RandomSaltGeneratorType
+
 	dialer.FromLinkRegister("shadowsocks", NewShadowsocksFromLink)
 	dialer.FromLinkRegister("ss", NewShadowsocksFromLink)
 	dialer.FromClashRegister("ss", NewShadowsocksFromClashObj)
