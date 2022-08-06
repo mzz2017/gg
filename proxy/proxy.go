@@ -85,7 +85,7 @@ func (p *Proxy) ListenAndServe(port int) error {
 	case e := <-eCh:
 		return e
 	case <-p.tcpListened:
-		// clear
+		// listen udp
 		addr = net.JoinHostPort("0.0.0.0", strconv.Itoa(p.listener.Addr().(*net.TCPAddr).Port))
 		go func() {
 			e := p.ListenUDP(addr)
@@ -126,7 +126,6 @@ func (p *Proxy) ListenUDP(addr string) (err error) {
 	if err != nil {
 		return err
 	}
-
 	lu, err := net.ListenUDP("udp", &net.UDPAddr{Port: port})
 	if err != nil {
 		return err

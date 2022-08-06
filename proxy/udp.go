@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/infra/ip_mtu_trie"
 	"github.com/mzz2017/softwind/pool"
 	"github.com/mzz2017/softwind/protocol/shadowsocks"
@@ -73,8 +74,20 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 			// 		But to archive it, we need bind permission.
 			//		Is it worth it?
 		}
-		// continue to request DNS but use replaced DNS server.
+		// is other DNS request type
+		if d, ok := p.dialer.(*dialer.Dialer); ok && !d.SupportUDP() {
+			// bypass
+			respData, _, err := forwardDNSMessage(tgt, data)
+			if err != nil {
+				return fmt.Errorf("forwardDNSMessage: %w", err)
+			}
+			_, err = p.udpConn.WriteTo(respData, lAddr)
+		}
+		// continue to forward DNS request but use replaced DNS server.
 		tgt = "1.1.1.1:53"
+	}
+	if d, ok := p.dialer.(*dialer.Dialer); ok && !d.SupportUDP() {
+		return fmt.Errorf("receive an unexpected UDP request to target %v: dialer does not support UDP", tgt)
 	}
 	rc, err := p.GetOrBuildUDPConn(lAddr, tgt, data)
 	if err != nil {
