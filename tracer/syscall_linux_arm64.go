@@ -31,11 +31,11 @@ type RawSockaddrInet6 struct {
 }
 
 type RawMsgHdr struct {
-	MsgName       uint
+	MsgName       uint64
 	LenMsgName    uint32
-	MsgIov        uint
+	MsgIov        uint64
 	LenMsgIov     uint64
-	MsgControl    uint
+	MsgControl    uint64
 	LenMsgControl uint64
 	Flags         int32
 }
