@@ -34,11 +34,13 @@ Compared to proxychains or graftcp, we have the following advantages:
 1. Run this command to download the latest release of go-graft:
 
     ```bash
-    # curl -Ls https://github.com/mzz2017/gg/raw/main/release/go.sh | sudo sh
+    # sudo sh -c "$(curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh)"
     # use the mirror:
-    curl -Ls https://hubmirror.v2raya.org/raw/mzz2017/gg/main/release/go.sh | sudo sh
+    sudo sh -c "$(curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh)"
     ```
 
+   > Without `sudo`, gg will be installed to user directory.
+   >
    > If the command gg `fails` after installation, check your path.
    >
    > You can also create a symbolic link to /usr/bin or any other directory in your path.
