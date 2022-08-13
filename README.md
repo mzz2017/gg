@@ -39,9 +39,9 @@ Compared to proxychains or graftcp, we have the following advantages:
     sudo sh -c "$(curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh)"
     ```
 
-   > Without `sudo`, gg will be installed to user directory.
+   > Without `sudo`, gg will be installed to the user directory.
    >
-   > If the command gg `fails` after installation, check your path.
+   > If the command gg `fails` after installation, check your `$PATH`.
    >
    > You can also create a symbolic link to /usr/bin or any other directory in your path.
    >
