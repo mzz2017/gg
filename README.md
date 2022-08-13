@@ -36,7 +36,7 @@ Compared to proxychains or graftcp, we have the following advantages:
     ```bash
     # sudo sh -c "$(curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh)"
     # use the mirror:
-    sudo sh -c "$(curl -L https://github.com/mzz2017/gg/raw/main/release/go.sh)"
+    sudo sh -c "$(curl -L https://hubmirror.v2raya.org/raw/mzz2017/gg/main/release/go.sh)"
     ```
 
    > Without `sudo`, gg will be installed to the user directory.
