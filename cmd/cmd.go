@@ -11,9 +11,44 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"syscall"
 )
+
+func AutoSu() {
+	if os.Getuid() == 0 {
+		return
+	}
+	program := filepath.Base(os.Args[0])
+	pathSudo, err := exec.LookPath("sudo")
+	if err != nil {
+		// skip
+		return
+	}
+	// https://github.com/WireGuard/wireguard-tools/blob/71799a8f6d1450b63071a21cad6ed434b348d3d5/src/wg-quick/linux.bash#L85
+	p, err := os.StartProcess(pathSudo, append([]string{
+		pathSudo,
+		"-E",
+		"-p",
+		fmt.Sprintf("%v must be run as root. Please enter the password for %%u to continue: ", program),
+		"--",
+	}, os.Args...), &os.ProcAttr{
+		Files: []*os.File{
+			os.Stdin,
+			os.Stdout,
+			os.Stderr,
+		},
+	})
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	stat, err := p.Wait()
+	if err != nil {
+		os.Exit(1)
+	}
+	os.Exit(stat.ExitCode())
+}
 
 var (
 	v       *viper.Viper
@@ -34,6 +69,8 @@ or
 $ gg git clone https://github.com/mzz2017/gg.git`)
 				return
 			}
+			// auto su
+			AutoSu()
 			// initiate config from args and config file
 			log := GetLogger(verbose)
 			log.Traceln("Version:", Version)
