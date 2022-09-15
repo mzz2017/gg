@@ -90,7 +90,7 @@ jobs:
         run: |
           go build -v -o gg-$ASSET_NAME -trimpath -ldflags "-X github.com/mzz2017/gg/cmd.Version=${{ steps.get_version.outputs.VERSION }} -s -w -buildid=" .
           upx gg-$ASSET_NAME
-          gg-$ASSET_NAME --version
+          ./gg-$ASSET_NAME --version
 
       - name: Signature
         run: |
