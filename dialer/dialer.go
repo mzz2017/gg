@@ -51,7 +51,7 @@ func (d *Dialer) Link() string {
 	return d.link
 }
 
-func (d *Dialer) Test(ctx context.Context) (bool, error) {
+func (d *Dialer) Test(ctx context.Context, url string) (bool, error) {
 	cd := ContextDialer{d.Dialer}
 	cli := http.Client{
 		Transport: &http.Transport{
@@ -59,7 +59,7 @@ func (d *Dialer) Test(ctx context.Context) (bool, error) {
 		},
 		Timeout: 15 * time.Second,
 	}
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://fonts.gstatic.com/generate_204", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return false, fmt.Errorf("%v: %w", ConnectivityTestFailedErr, err)
 	}

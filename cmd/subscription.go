@@ -70,7 +70,7 @@ func resolveSubscriptionAsBase64(log *logrus.Logger, b []byte) (dialers []*diale
 		if len(line) == 0 {
 			continue
 		}
-		d, e := GetDialerFromLink(line, false)
+		d, e := GetDialerFromLink(line, false, "")
 		if e != nil {
 			log.Tracef("%v: %v\n", e, line)
 			continue
