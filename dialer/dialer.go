@@ -8,6 +8,9 @@ import (
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/http"
+	"path"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -72,7 +75,10 @@ func (d *Dialer) Test(ctx context.Context, url string) (bool, error) {
 		return false, fmt.Errorf("%v: %w", ConnectivityTestFailedErr, err)
 	}
 	defer resp.Body.Close()
-	return resp.StatusCode == 204, nil
+	if page := path.Base(req.URL.Path); strings.HasPrefix(page, "generate_") {
+		return strconv.Itoa(resp.StatusCode) == strings.TrimPrefix(page, "generate_"), nil
+	}
+	return resp.StatusCode >= 200 && resp.StatusCode < 400, nil
 }
 
 type FromLinkCreator func(link string) (dialer *Dialer, err error)
