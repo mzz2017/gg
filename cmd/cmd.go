@@ -70,8 +70,11 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 				return
 			}
 			// auto su if use 'gg sudo' or 'gg su'
-			if os.Args[1] == "sudo" || os.Args[1] == "su" {
-				AutoSu()
+			if len(os.Args) >= 2 {
+				cmdName := filepath.Base(os.Args[1])
+				if cmdName == "sudo" || cmdName == "su" {
+					AutoSu()
+				}
 			}
 			// initiate config from args and config file
 			log := GetLogger(verbose)

@@ -404,18 +404,15 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		)
 	}
 	loopback := t.proxy.AllocProjection(originAddr)
-	ipv4MappedIPv6, err := netip.ParseAddr("::ffff:" + loopback.String())
-	if err != nil {
-		return nil, err
-	}
-	addr.Addr = ipv4MappedIPv6.As16()
+	// 6in4
+	addr.Addr = loopback.As16()
 	binary.BigEndian.PutUint16(addr.Port[:], uint16(portHackTo))
 	_bSockAddrToPock := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
 		Data: uintptr(unsafe.Pointer(&addr)),
 		Cap:  binary.Size(addr),
 		Len:  binary.Size(addr),
 	}))
-	t.log.Tracef("handleINet6 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(ipv4MappedIPv6.String(), strconv.Itoa(portHackTo)))
+	t.log.Tracef("handleINet6 (%v): origin: %v, after: %v", network, originAddr, net.JoinHostPort(netip.AddrFrom16(loopback.As16()).String(), strconv.Itoa(portHackTo)))
 	bSockAddrToPock := make([]byte, len(_bSockAddrToPock))
 	copy(bSockAddrToPock, _bSockAddrToPock)
 	return bSockAddrToPock, nil

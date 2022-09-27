@@ -121,6 +121,15 @@ func (p *Proxy) hijackDNS(data []byte) (resp *HijackResp, isDNSQuery bool) {
 	case dnsmessage.TypeAAAA:
 		domain = strings.TrimSuffix(q.Name.String(), ".")
 		ans = p.AllocProjection(domain)
+		// 6in4
+		dmsg.Answers = []dnsmessage.Resource{{
+			Header: dnsmessage.ResourceHeader{
+				Name:  q.Name,
+				Class: q.Class,
+				TTL:   10,
+			},
+			Body: &dnsmessage.AAAAResource{AAAA: ans.As16()},
+		}}
 	case dnsmessage.TypeA:
 		domain = strings.TrimSuffix(q.Name.String(), ".")
 		ans = p.AllocProjection(domain)
