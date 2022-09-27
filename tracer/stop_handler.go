@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/mzz2017/gg/proxy"
-	"inet.af/netaddr"
 	"net"
 	"net/netip"
 	"reflect"
@@ -405,7 +404,7 @@ func (t *Tracer) handleINet6(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		)
 	}
 	loopback := t.proxy.AllocProjection(originAddr)
-	ipv4MappedIPv6, err := netaddr.ParseIP("::ffff:" + loopback.String())
+	ipv4MappedIPv6, err := netip.ParseAddr("::ffff:" + loopback.String())
 	if err != nil {
 		return nil, err
 	}

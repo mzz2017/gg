@@ -97,35 +97,53 @@ func completeKey(key string) string {
 	return key
 }
 
+func ConfigHome() string {
+	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
+		return xdgConfigHome
+	}
+
+	if home, e := os.UserHomeDir(); e == nil {
+		return filepath.Join(home, ".config")
+	}
+
+	return ""
+}
+
 func getConfig(log *logrus.Logger, bindToConfig bool, newViper func() *viper.Viper, flagCmd *cobra.Command) (v *viper.Viper, path string) {
 	v = newViper()
-	home, err := os.UserHomeDir()
-	if err == nil {
-		v.AddConfigPath(filepath.Join(home, ".config", "gg"))
+	configHome := ConfigHome()
+	var errReading error
+	if configHome != "" {
+		// {XDG_CONFIG_HOME:-$HOME/.config}/gg/config.toml
+		v.AddConfigPath(filepath.Join(configHome, "gg"))
 		v.SetConfigName("config")
 		v.SetConfigType("toml")
-		err = v.ReadInConfig()
-		if err != nil {
-			v = newViper()
-			v.AddConfigPath(home)
-			v.SetConfigName(".ggconfig")
-			v.SetConfigType("toml")
-			err = v.ReadInConfig()
+		errReading = v.ReadInConfig()
+		if errReading != nil {
+			// $HOME/.ggconfig.toml
+			if home, e := os.UserHomeDir(); e == nil {
+				v = newViper()
+				v.AddConfigPath(home)
+				v.SetConfigName(".ggconfig")
+				v.SetConfigType("toml")
+				errReading = v.ReadInConfig()
+			}
 		}
 	}
-	if err != nil {
+	if errReading != nil {
+		// /etc/ggconfig.toml
 		v = viper.New()
 		v.AddConfigPath("/etc/")
 		v.SetConfigName("ggconfig")
 		v.SetConfigType("toml")
-		err = v.ReadInConfig()
+		errReading = v.ReadInConfig()
 	}
-	if err == nil {
+	if errReading == nil {
 		log.Tracef("Using config file: %v", v.ConfigFileUsed())
-	} else if err != nil {
-		switch err.(type) {
+	} else if errReading != nil {
+		switch errReading.(type) {
 		default:
-			log.Fatalf("Fatal error loading config file: %s: %s", v.ConfigFileUsed(), err)
+			log.Fatalf("Fatal error loading config file: %s: %s", v.ConfigFileUsed(), errReading)
 		case viper.ConfigFileNotFoundError:
 			log.Tracef("No config file found. Using default values.")
 		}
@@ -159,10 +177,11 @@ func getConfig(log *logrus.Logger, bindToConfig bool, newViper func() *viper.Vip
 	log.Tracef("Config:\n%v\n", strings.Join(common.MapToKV(v.AllSettings()), "\n"))
 
 	if v.ConfigFileUsed() == "" {
-		if home == "" {
+		// no config file found
+		if configHome == "" {
 			return v, filepath.Join("/etc/ggconfig.toml")
 		}
-		return v, filepath.Join(home, ".ggconfig.toml")
+		return v, filepath.Join(configHome, "gg", "config.toml")
 	}
 	return v, v.ConfigFileUsed()
 }
