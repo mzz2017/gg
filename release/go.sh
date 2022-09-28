@@ -88,7 +88,7 @@ download_and_install() {
   chgrp root "${bin_dir}/gg" >/dev/null 2>&1 || true
   ptrace_scope=$(cat /proc/sys/kernel/yama/ptrace_scope)
   if [ "$ptrace_scope" = 3 ]; then
-    warn "Your kernel have no ptrace permission, please use following command and reboot:"
+    warn "Your kernel does not allow ptrace permission, please use following command and reboot:"
     echo "echo 1 | sudo tee -a /etc/sysctl.d/10-ptrace.conf"
   elif [ "$ptrace_scope" = 2 ] && [ "$cap_set" = 0 ]; then
     warn "Your ptrace_scope is 2 and you should give the correct capability to gg:"
