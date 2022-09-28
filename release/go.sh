@@ -92,7 +92,7 @@ download_and_install() {
     echo "echo 1 | sudo tee -a /etc/sysctl.d/10-ptrace.conf"
   elif [ "$ptrace_scope" = 2 ] && [ "$cap_set" = 0 ]; then
     warn "Your ptrace_scope is 2 and you should give the correct capability to gg:"
-    echo "setcap cap_net_raw,cap_sys_ptrace+ep ""${bin_dir}""/gg"
+    echo "sudo setcap cap_net_raw,cap_sys_ptrace+ep ""${bin_dir}""/gg"
   fi
 }
 
