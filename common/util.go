@@ -19,7 +19,7 @@ func Base64StdDecode(s string) (string, error) {
 	if err != nil {
 		return saver, err
 	}
-	return string(raw), err
+	return string(raw), nil
 }
 
 func BoolToString(b bool) string {
@@ -46,7 +46,7 @@ func Base64URLDecode(s string) (string, error) {
 	if err != nil {
 		return saver, err
 	}
-	return string(raw), err
+	return string(raw), nil
 }
 
 func ObjectToKV(v interface{}, tagName string) (kv []string) {

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/mzz2017/gg/common"
@@ -41,8 +40,14 @@ type SIP008Server struct {
 func resolveSubscriptionAsClash(log *logrus.Logger, b []byte) (dialers []*dialer.Dialer, err error) {
 	log.Traceln("try to resolve as Clash")
 
+	// base64 decode
+	raw, e := common.Base64StdDecode(string(b))
+	if e != nil {
+		raw, _ = common.Base64URLDecode(string(b))
+	}
+
 	var conf ClashConfig
-	if err = yaml.NewDecoder(bytes.NewReader(b)).Decode(&conf); err != nil {
+	if err = yaml.NewDecoder(strings.NewReader(raw)).Decode(&conf); err != nil {
 		return nil, err
 	}
 	for i, node := range conf.Proxy {
