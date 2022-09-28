@@ -82,9 +82,18 @@ download_and_install() {
   fi
   check_bin_dir "${bin_dir}"
   install -vDm755 "${temp_file}" "${bin_dir}/gg"
-  setcap cap_net_raw+ep "${bin_dir}/gg" >/dev/null 2>&1 || true
+  cap_set=0
+  setcap cap_net_raw,cap_sys_ptrace+ep "${bin_dir}/gg" && cap_set=1
   chown root "${bin_dir}/gg" >/dev/null 2>&1 || true
   chgrp root "${bin_dir}/gg" >/dev/null 2>&1 || true
+  ptrace_scope=$(cat /proc/sys/kernel/yama/ptrace_scope)
+  if [ "$ptrace_scope" = 3 ]; then
+    warn "Your kernel have no ptrace permission, please use following command and reboot:"
+    echo "echo 1 | sudo tee -a /etc/sysctl.d/10-ptrace.conf"
+  elif [ "$ptrace_scope" = 2 ] && [ "$cap_set" = 0 ]; then
+    warn "Your ptrace_scope is 2 and you should give the correct capability to gg:"
+    echo "setcap cap_net_raw,cap_sys_ptrace+ep ""${bin_dir}""/gg"
+  fi
 }
 
 download_and_install
