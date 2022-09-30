@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/mzz2017/gg/cmd/infra"
 	"github.com/mzz2017/gg/tracer"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -16,40 +17,6 @@ import (
 	"syscall"
 )
 
-func AutoSu() {
-	if os.Getuid() == 0 {
-		return
-	}
-	program := filepath.Base(os.Args[0])
-	pathSudo, err := exec.LookPath("sudo")
-	if err != nil {
-		// skip
-		return
-	}
-	// https://github.com/WireGuard/wireguard-tools/blob/71799a8f6d1450b63071a21cad6ed434b348d3d5/src/wg-quick/linux.bash#L85
-	p, err := os.StartProcess(pathSudo, append([]string{
-		pathSudo,
-		"-E",
-		"-p",
-		fmt.Sprintf("%v must be run as root. Please enter the password for %%u to continue: ", program),
-		"--",
-	}, os.Args...), &os.ProcAttr{
-		Files: []*os.File{
-			os.Stdin,
-			os.Stdout,
-			os.Stderr,
-		},
-	})
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	stat, err := p.Wait()
-	if err != nil {
-		os.Exit(1)
-	}
-	os.Exit(stat.ExitCode())
-}
-
 var (
 	v       *viper.Viper
 	Version = "unknown"
@@ -61,6 +28,7 @@ var (
 program to your modern proxy without installing any other programs.`,
 		Version: Version,
 		Run: func(cmd *cobra.Command, args []string) {
+			program := filepath.Base(os.Args[0])
 			hasSelectFlag, _ := cmd.PersistentFlags().GetBool("select")
 			if len(args) == 0 && !hasSelectFlag {
 				fmt.Println(`No command is given, you can try:
@@ -69,11 +37,12 @@ or
 $ gg git clone https://github.com/mzz2017/gg.git`)
 				return
 			}
+
 			// auto su if use 'gg sudo' or 'gg su'
 			if len(os.Args) >= 2 {
 				cmdName := filepath.Base(os.Args[1])
 				if cmdName == "sudo" || cmdName == "su" {
-					AutoSu()
+					infra.AutoSu()
 				}
 			}
 			// initiate config from args and config file
@@ -81,6 +50,23 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			log.Traceln("Version:", Version)
 			log.Tracef("OS/Arch: %v/%v\n", runtime.GOOS, runtime.GOARCH)
 			v, _ = getConfig(log, true, viper.New, cmd)
+
+			// check ptrace_scope and capability
+			if err := infra.CheckPtraceCapability(); err != nil {
+				switch err {
+				case infra.ErrBadCapability:
+					path, err := filepath.Abs(os.Args[0])
+					if err != nil {
+						path = filepath.Clean(os.Args[0])
+					}
+					log.Fatalf("Your ptrace_scope is 2 and you should give the correct capability to %v:\nsudo setcap cap_net_raw,cap_sys_ptrace+ep %v", program, path)
+				case infra.ErrBadPtraceScope:
+					log.Fatalln("Your kernel does not allow ptrace permission, please use following command and reboot:\necho kernel.yama.ptrace_scope = 1 | sudo tee -a /etc/sysctl.d/10-ptrace.conf")
+				default:
+					log.Warn(err)
+				}
+			}
+
 			// validate command and get the fullPath from $PATH
 			var (
 				fullPath string
