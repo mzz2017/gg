@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"unsafe"
 )
 
 var (
@@ -38,7 +37,7 @@ func CheckPtraceCapability() error {
 	case 0, 1:
 	case 2:
 		var hdr unix.CapUserHeader
-		if _, _, err := unix.RawSyscall(unix.SYS_CAPGET, uintptr(unsafe.Pointer(&hdr)), 0, 0); err != 0 {
+		if err := unix.Capget(&hdr, nil); err != nil {
 			return fmt.Errorf("%w: get version: %v", ErrGetCapability, err)
 		}
 		var data unix.CapUserData
