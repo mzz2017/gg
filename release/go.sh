@@ -103,9 +103,9 @@ download_and_install() {
 check_command() {
   echo "$SHELL" | grep "/fish" >/dev/null
   if [ $? = 0 ]; then
-    alias_output=$(fish -c "functions gg --no-details")
+    alias_output=$(fish -ic "functions gg --no-details")
   else
-    alias_output=$(command -v gg); echo "$alias_output" | grep "alias"
+    alias_output=$("$SHELL" -ic "command -v gg"); echo "$alias_output" | grep "alias"
   fi
   if [ $? = 0 ]; then
     warn "[Warn] gg conflicts with:"
