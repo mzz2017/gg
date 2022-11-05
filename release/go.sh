@@ -7,6 +7,10 @@ warn() {
   printf '%s\n' "${YELLOW}! $*${NO_COLOR}"
 }
 
+_warn() {
+  printf '%s\n' "${YELLOW}$*${NO_COLOR}"
+}
+
 check_bin_dir() {
   bin_dir="$1"
 
@@ -88,7 +92,7 @@ download_and_install() {
   chgrp root "${bin_dir}/gg" >/dev/null 2>&1 || true
   ptrace_scope=$(cat /proc/sys/kernel/yama/ptrace_scope)
   if [ "$ptrace_scope" = 3 ]; then
-    warn "Your kernel does not allow ptrace permission, please use following command and reboot:"
+    warn "Your kernel does not allow ptrace permission; please use following command and reboot:"
     echo "echo kernel.yama.ptrace_scope = 1 | sudo tee -a /etc/sysctl.d/10-ptrace.conf"
   elif [ "$ptrace_scope" = 2 ] && [ "$cap_set" = 0 ]; then
     warn "Your ptrace_scope is 2 and you should give the correct capability to gg:"
@@ -96,5 +100,25 @@ download_and_install() {
   fi
 }
 
+check_command() {
+  echo "$SHELL" | grep "/fish" >/dev/null
+  if [ $? = 0 ]; then
+    alias_output=$(fish -c "functions gg --no-details")
+  else
+    alias_output=$(command -v gg); echo "$alias_output" | grep "alias"
+  fi
+  if [ $? = 0 ]; then
+    warn "[Warn] gg conflicts with:"
+    echo "$alias_output" | sed "s/^/  /g"
+    _warn "please use follolwing commands to resolve it:"
+    echo $SHELL | grep "/zsh" >/dev/null && echo '  echo "unalias gg" | tee -a ~/.zshrc; source ~/.zshrc'
+    echo $SHELL | grep "/bash" >/dev/null && echo '  echo "unalias gg" | tee -a ~/.bashrc; source ~/.bashrc'
+    echo $SHELL | grep "/fish" >/dev/null && echo '  echo "functions --erase gg" | tee -a ~/.config/fish/conf.d/99-go-graft.fish; source ~/.config/fish/conf.d/99-go-graft.fish'
+  else
+    gg --version
+  fi
+}
+
 download_and_install
-gg --version
+check_command
+
