@@ -138,7 +138,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("node", "n", "", "node share-link of your modern proxy")
 	rootCmd.PersistentFlags().StringP("subscription", "s", "", "subscription-link of your modern proxy")
 	rootCmd.PersistentFlags().Bool("noudp", false, "do not redirect UDP traffic, even though the proxy server supports")
-	rootCmd.PersistentFlags().Bool("testnode", true, "test the connectivity before connecting to the node")
+	rootCmd.PersistentFlags().String("testnode", "true", "test the connectivity before connecting to the node")
 	rootCmd.PersistentFlags().Bool("select", false, "manually select the node to connect from the subscription")
 	rootCmd.AddCommand(configCmd)
 }

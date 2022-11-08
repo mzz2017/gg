@@ -40,9 +40,11 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 				_, err = p.udpConn.WriteTo(hijackResp.Resp, lAddr)
 				return err
 			case dnsmessage.TypeA:
-				respData, respMsg, err := forwardDNSMessage(tgt, data)
-				if err != nil {
-					return fmt.Errorf("forwardDNSMessage: %w", err)
+				respData, respMsg, e := forwardDNSMessage(tgt, data)
+				if e != nil {
+					p.log.Tracef("will not restore INET4 ICMP target: forwardDNSMessage: %v", e)
+					_, err = p.udpConn.WriteTo(hijackResp.Resp, lAddr)
+					return err
 				}
 				if len(respMsg.Answers) == 0 {
 					// no answer
