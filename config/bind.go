@@ -132,28 +132,40 @@ func SetValueHierarchicalMap(m map[string]interface{}, key string, val interface
 }
 
 func SetValueHierarchicalStruct(m interface{}, key string, val string) error {
-	keys := strings.Split(key, ".")
-	ifv := reflect.Indirect(reflect.ValueOf(m))
-	ift := ifv.Type()
-	for _, key := range keys {
-		found := false
-		for i := 0; i < ifv.NumField(); i++ {
-			name, ok := ift.Field(i).Tag.Lookup("mapstructure")
-			if ok && name == key {
-				found = true
-				ifv = ifv.Field(i)
-				ift = ifv.Type()
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("unexpected key: %v", key)
-		}
+	ifv, err := GetValueHierarchicalStruct(m, key)
+	if err != nil {
+		return err
 	}
 	if !FuzzyDecode(ifv.Addr().Interface(), val) {
 		return fmt.Errorf("type does not match: type \"%v\" and value \"%v\"", ifv.Kind(), val)
 	}
 	return nil
+}
+
+func GetValueHierarchicalStruct(m interface{}, key string) (reflect.Value, error) {
+	keys := strings.Split(key, ".")
+	ifv := reflect.Indirect(reflect.ValueOf(m))
+	ift := ifv.Type()
+	lastK := ""
+	for _, k := range keys {
+		found := false
+		if ift.Kind() == reflect.Struct {
+			for i := 0; i < ifv.NumField(); i++ {
+				name, ok := ift.Field(i).Tag.Lookup("mapstructure")
+				if ok && name == k {
+					found = true
+					ifv = ifv.Field(i)
+					ift = ifv.Type()
+					lastK = k
+					break
+				}
+			}
+		}
+		if !found {
+			return reflect.Value{}, fmt.Errorf(`unexpected key "%v": "%v" (%v type) has no member "%v"`, key, lastK, ift.Kind().String(), k)
+		}
+	}
+	return ifv, nil
 }
 
 func FuzzyDecode(to interface{}, val string) bool {

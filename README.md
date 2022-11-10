@@ -214,6 +214,16 @@ gg config
 > test_node_before_use=true
 > ```
 
+Unset or reset specific config variable:
+
+```bash
+gg config -u node
+```
+
+> ```
+> node=
+> ```
+
 Read specific config variable:
 
 ```bash

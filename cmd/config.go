@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -20,10 +21,15 @@ var (
 		Use:   "config",
 		Short: "Get and set persistent global options",
 		Run: func(cmd *cobra.Command, args []string) {
-			// read
 			v, configPath := getConfig(logrus.New(), true, viper.New, nil)
 			write, _ := cmd.PersistentFlags().GetString("write")
-			if len(write) == 0 {
+			unset, _ := cmd.PersistentFlags().GetString("unset")
+			if len(write) != 0 && len(unset) != 0 {
+				logrus.Fatalln(`Conflicting flags --unset and --write detected; you can only specify one of them.`)
+			}
+
+			// read
+			if len(write) == 0 && len(unset) == 0 {
 				kv := common.ObjectToKV(config.ParamsObj, "mapstructure")
 				if len(args) != 0 {
 					keySetToFind := common.StringsMapToSet(args, completeKey)
@@ -47,17 +53,44 @@ var (
 				fmt.Println(strings.Join(kv, "\n"))
 				return
 			}
+
 			// set value
 			m := v.AllSettings()
-			fields := strings.SplitN(write, "=", 2)
-			if len(fields) == 1 {
-				logrus.Fatalln(`Unexpected format.
+			var (
+				key string
+				val string
+			)
+			if len(write) != 0 {
+				fields := strings.SplitN(write, "=", 2)
+				if len(fields) == 1 {
+					logrus.Fatalln(`Unexpected format.
 For example:
 gg config -w no_udp=true`)
+				}
+				key = fields[0]
+				val = fields[1]
+			} else if len(unset) != 0 {
+				key = unset
+				// Use empty viper and empty params to get the default value of target key.
+				var (
+					emptyViper  = viper.New()
+					emptyParams config.Params
+				)
+				config.NewBinder(emptyViper).Bind(config.Params{})
+				if err := emptyViper.Unmarshal(&emptyParams); err != nil {
+					log.Fatalf("Fatal error loading empty config: %s", err)
+				}
+				defaultValue, err := config.GetValueHierarchicalStruct(emptyParams, key)
+				if err != nil {
+					logrus.Fatalln(err)
+				}
+				val = fmt.Sprint(defaultValue.Interface())
+				fmt.Printf("%v=%v", key, val)
+			} else {
+				panic("unexpected flag")
 			}
 			// make sure it is valid
-			key := completeKey(fields[0])
-			val := fields[1]
+			key = completeKey(key)
 			if err := config.SetValueHierarchicalStruct(&config.Params{}, key, val); err != nil {
 				logrus.Fatalln(err)
 			}
@@ -75,6 +108,7 @@ gg config -w no_udp=true`)
 
 func init() {
 	configCmd.PersistentFlags().StringP("write", "w", "", "write config variable")
+	configCmd.PersistentFlags().StringP("unset", "u", "", "unset config variable")
 }
 
 func WriteConfig(settings map[string]interface{}, configPath string) error {

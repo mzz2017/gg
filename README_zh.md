@@ -207,6 +207,16 @@ gg config
 > test_node_before_use=true
 > ```
 
+清除、重置某个特定配置项:
+
+```bash
+gg config -u node
+```
+
+> ```
+> node=
+> ```
+
 读取某个特定配置项:
 
 ```bash
