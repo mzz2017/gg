@@ -67,10 +67,10 @@ var (
 For example:
 gg config -w no_udp=true`)
 				}
-				key = fields[0]
+				key = completeKey(fields[0])
 				val = fields[1]
 			} else if len(unset) != 0 {
-				key = unset
+				key = completeKey(unset)
 				// Use empty viper and empty params to get the default value of target key.
 				var (
 					emptyViper  = viper.New()
@@ -89,8 +89,6 @@ gg config -w no_udp=true`)
 			} else {
 				panic("unexpected flag")
 			}
-			// make sure it is valid
-			key = completeKey(key)
 			if err := config.SetValueHierarchicalStruct(&config.Params{}, key, val); err != nil {
 				logrus.Fatalln(err)
 			}
