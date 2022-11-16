@@ -111,7 +111,7 @@ func (p *Proxy) ListenTCP(addr string) (err error) {
 		go func() {
 			err := p.handleTCP(conn)
 			if err != nil {
-				p.log.Infof("handleTCP: %v", err)
+				p.log.Warnf("handleTCP: %v", err)
 			}
 		}()
 	}

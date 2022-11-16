@@ -287,8 +287,8 @@ github.com/mzz2017/disk-bloom v1.0.1 h1:rEF9MiXd9qMW3ibRpqcerLXULoTgRlM21yqqJl1B
 github.com/mzz2017/disk-bloom v1.0.1/go.mod h1:JLHETtUu44Z6iBmsqzkOtFlRvXSlKnxjwiBRDapizDI=
 github.com/mzz2017/pflag v0.0.0-20211204030847-74e9419ee6b3 h1:i+hUSMSd8hBlPt1zDcbj0lap7Ct7TFZ++At8CqLConE=
 github.com/mzz2017/pflag v0.0.0-20211204030847-74e9419ee6b3/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
-github.com/mzz2017/softwind v0.0.0-20220927083556-e7aeacf2aa80 h1:le9tVBZ1lBRLYMHvmAYTvL2a811txJ/ZNhGHx2PngRc=
-github.com/mzz2017/softwind v0.0.0-20220927083556-e7aeacf2aa80/go.mod h1:K1nXwtBokwEsfOfdT/5zV6R8QabGkyhcR0iuTrRZcYY=
+github.com/mzz2017/softwind v0.0.0-20221116204743-ce3c5fd2f140 h1:vPCyUUoSK50yyq5vZ6HHdlHBZwZM8jJhiMy+Hg1wqIc=
+github.com/mzz2017/softwind v0.0.0-20221116204743-ce3c5fd2f140/go.mod h1:K1nXwtBokwEsfOfdT/5zV6R8QabGkyhcR0iuTrRZcYY=
 github.com/nadoo/glider v0.16.2 h1:lF+Bj+Q58UwFcO4cna0lSjemxaN0bc96OdIOndcFNJM=
 github.com/nadoo/glider v0.16.2/go.mod h1:TfmgWSCINk+zrgiu4AW09Z5+4pzTXJdPq4+ifIV2ALw=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
