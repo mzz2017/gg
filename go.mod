@@ -8,7 +8,7 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/json-iterator/go v1.1.12
-	github.com/mzz2017/softwind v0.0.0-20221116204743-ce3c5fd2f140
+	github.com/mzz2017/softwind v0.0.0-20221117051613-1c488b3796ea
 	github.com/nadoo/glider v0.16.2
 	github.com/pelletier/go-toml v1.9.4
 	github.com/sirupsen/logrus v1.8.1
