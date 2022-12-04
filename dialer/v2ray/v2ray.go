@@ -114,7 +114,8 @@ func (s *V2Ray) Dialer() (data *dialer.Dialer, err error) {
 				Scheme: "tls",
 				Host:   net.JoinHostPort(s.Add, s.Port),
 				RawQuery: url.Values{
-					"sni": []string{sni},
+					"sni":           []string{sni},
+					"allowInsecure": []string{common.BoolToString(s.AllowInsecure)},
 				}.Encode(),
 			}
 			d, err = tls.NewTls(u.String(), d)
@@ -135,9 +136,10 @@ func (s *V2Ray) Dialer() (data *dialer.Dialer, err error) {
 			serviceName = "GunService"
 		}
 		d = &grpc.Dialer{
-			NextDialer:  &protocol.DialerConverter{Dialer: d},
-			ServiceName: serviceName,
-			ServerName:  sni,
+			NextDialer:    &protocol.DialerConverter{Dialer: d},
+			ServiceName:   serviceName,
+			ServerName:    sni,
+			AllowInsecure: s.AllowInsecure,
 		}
 	default:
 		return nil, fmt.Errorf("%w: network: %v", dialer.UnexpectedFieldErr, s.Net)
@@ -223,14 +225,14 @@ func ParseClashVMess(o *yaml.Node) (data *V2Ray, err error) {
 		Host:          host,
 		SNI:           option.ServerName,
 		Path:          path,
-		AllowInsecure: false,
+		AllowInsecure: option.SkipCertVerify,
 		Alpn:          alpn,
 		V:             "2",
 		Protocol:      "vmess",
 	}
-	if option.SkipCertVerify {
-		return nil, fmt.Errorf("%w: skip-cert-verify=true", dialer.UnexpectedFieldErr)
-	}
+	//if option.SkipCertVerify {
+	//	return nil, fmt.Errorf("%w: skip-cert-verify=true", dialer.UnexpectedFieldErr)
+	//}
 	if option.TLS {
 		s.TLS = "tls"
 	}
@@ -242,19 +244,20 @@ func ParseVlessURL(vless string) (data *V2Ray, err error) {
 		return nil, err
 	}
 	data = &V2Ray{
-		Ps:       u.Fragment,
-		Add:      u.Hostname(),
-		Port:     u.Port(),
-		ID:       u.User.String(),
-		Net:      u.Query().Get("type"),
-		Type:     u.Query().Get("headerType"),
-		SNI:      u.Query().Get("sni"),
-		Host:     u.Query().Get("host"),
-		Path:     u.Query().Get("path"),
-		TLS:      u.Query().Get("security"),
-		Flow:     u.Query().Get("flow"),
-		Alpn:     u.Query().Get("alpn"),
-		Protocol: "vless",
+		Ps:            u.Fragment,
+		Add:           u.Hostname(),
+		Port:          u.Port(),
+		ID:            u.User.String(),
+		Net:           u.Query().Get("type"),
+		Type:          u.Query().Get("headerType"),
+		SNI:           u.Query().Get("sni"),
+		Host:          u.Query().Get("host"),
+		Path:          u.Query().Get("path"),
+		TLS:           u.Query().Get("security"),
+		Flow:          u.Query().Get("flow"),
+		Alpn:          u.Query().Get("alpn"),
+		AllowInsecure: common.StringToBool(u.Query().Get("allowInsecure")),
+		Protocol:      "vless",
 	}
 	if data.Net == "" {
 		data.Net = "tcp"
@@ -379,6 +382,7 @@ func (s *V2Ray) ExportToURL() string {
 		if s.TLS != "none" {
 			common.SetValue(&query, "sni", s.Host) // FIXME: it may be different from ws's host
 			common.SetValue(&query, "alpn", s.Alpn)
+			common.SetValue(&query, "allowInsecure", common.BoolToString(s.AllowInsecure))
 		}
 		if s.TLS == "xtls" {
 			common.SetValue(&query, "flow", s.Flow)

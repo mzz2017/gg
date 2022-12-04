@@ -30,10 +30,12 @@ func BoolToString(b bool) string {
 }
 
 func StringToBool(s string) bool {
-	if strings.EqualFold(s, "true") || s == "1" {
+	switch strings.ToLower(s) {
+	case "true", "yes", "1", "y":
 		return true
+	default:
+		return false
 	}
-	return false
 }
 
 func Base64URLDecode(s string) (string, error) {

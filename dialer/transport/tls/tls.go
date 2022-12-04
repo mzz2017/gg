@@ -3,6 +3,7 @@ package tls
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/mzz2017/gg/common"
 	"golang.org/x/net/proxy"
 	"net"
 	"net/url"
@@ -33,8 +34,8 @@ func NewTls(s string, d proxy.Dialer) (*Tls, error) {
 	t.serverName = query.Get("sni")
 
 	// skipVerify
-	if query.Get("allowInsecure") == "true" || query.Get("allowInsecure") == "1" ||
-		query.Get("skipVerify") == "true" || query.Get("skipVerify") == "1" {
+	if common.StringToBool(query.Get("allowInsecure")) ||
+		common.StringToBool("skipVerify") {
 		t.skipVerify = true
 	}
 	if t.serverName == "" {

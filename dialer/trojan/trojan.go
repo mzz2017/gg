@@ -58,7 +58,8 @@ func (s *Trojan) Dialer() (*dialer.Dialer, error) {
 		Scheme: "tls",
 		Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 		RawQuery: url.Values{
-			"sni": []string{s.Sni},
+			"sni":           []string{s.Sni},
+			"allowInsecure": []string{common.BoolToString(s.AllowInsecure)},
 		}.Encode(),
 	}
 	var err error
@@ -88,9 +89,10 @@ func (s *Trojan) Dialer() (*dialer.Dialer, error) {
 			serviceName = "GunService"
 		}
 		d = &grpc.Dialer{
-			NextDialer:  &protocol.DialerConverter{Dialer: d},
-			ServiceName: serviceName,
-			ServerName:  s.Sni,
+			NextDialer:    &protocol.DialerConverter{Dialer: d},
+			ServiceName:   serviceName,
+			ServerName:    s.Sni,
+			AllowInsecure: s.AllowInsecure,
 		}
 	}
 	if strings.HasPrefix(s.Encryption, "ss;") {
