@@ -35,7 +35,7 @@ func NewTls(s string, d proxy.Dialer) (*Tls, error) {
 
 	// skipVerify
 	if common.StringToBool(query.Get("allowInsecure")) ||
-		common.StringToBool("skipVerify") {
+		common.StringToBool(query.Get("skipVerify")) {
 		t.skipVerify = true
 	}
 	if t.serverName == "" {
