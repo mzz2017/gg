@@ -46,7 +46,7 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 				}
 			}
 			// initiate config from args and config file
-			log := GetLogger(verbose)
+			log := NewLogger(verbose)
 			log.Traceln("Version:", Version)
 			log.Tracef("OS/Arch: %v/%v\n", runtime.GOOS, runtime.GOARCH)
 			v, _ = getConfig(log, true, viper.New, cmd)
@@ -143,7 +143,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 }
 
-func GetLogger(verbose int) *logrus.Logger {
+func NewLogger(verbose int) *logrus.Logger {
 	log := logrus.New()
 
 	var level logrus.Level

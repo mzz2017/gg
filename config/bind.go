@@ -49,7 +49,7 @@ func (b *Binder) Bind(iface interface{}) error {
 			}
 		}
 		if !changed {
-			return fmt.Errorf("%v: %w", strings.Join(common.MustMapKeys(b.toResolve), ", "), ErrMutualReference)
+			return fmt.Errorf("%v: %w", strings.Join(common.MustGetMapKeys(b.toResolve), ", "), ErrMutualReference)
 		}
 	}
 	return nil
