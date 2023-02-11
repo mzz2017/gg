@@ -58,17 +58,9 @@ func (s *Shadowsocks) Dialer() (*dialer.Dialer, error) {
 	default:
 		return nil, fmt.Errorf("unsupported shadowsocks encryption method: %v", s.Cipher)
 	}
+	var err error
 	supportUDP := s.UDP
 	d := dialer.SymmetricDirect
-	d, err := protocol.NewDialer("shadowsocks", d, protocol.Header{
-		ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
-		Cipher:       s.Cipher,
-		Password:     s.Password,
-		IsClient:     true,
-	})
-	if err != nil {
-		return nil, err
-	}
 	switch s.Plugin.Name {
 	case "simple-obfs":
 		uSimpleObfs := url.URL{
@@ -85,6 +77,15 @@ func (s *Shadowsocks) Dialer() (*dialer.Dialer, error) {
 			return nil, err
 		}
 		supportUDP = false
+	}
+	d, err = protocol.NewDialer("shadowsocks", d, protocol.Header{
+		ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+		Cipher:       s.Cipher,
+		Password:     s.Password,
+		IsClient:     true,
+	})
+	if err != nil {
+		return nil, err
 	}
 	return dialer.NewDialer(d, supportUDP, s.Name, s.Protocol, s.ExportToURL()), nil
 }
