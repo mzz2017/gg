@@ -40,11 +40,10 @@ func NewWs(s string, d proxy.Dialer) (*Ws, error) {
 	wsUrl := url.URL{
 		Scheme: u.Scheme,
 		Host:   u.Host,
-		Path:   u.Path,
 	}
-	t.wsAddr = wsUrl.String()
+	t.wsAddr = wsUrl.String() + u.Path
 	t.wsDialer = &websocket.Dialer{
-		NetDial:      d.Dial,
+		NetDial: d.Dial,
 		//Subprotocols: []string{"binary"},
 	}
 	if u.Scheme == "wss" {
