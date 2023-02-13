@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/softwind/protocol/http"
 	"gopkg.in/yaml.v3"
@@ -17,13 +18,14 @@ func init() {
 }
 
 type HTTP struct {
-	Name     string `json:"name"`
-	Server   string `json:"server"`
-	Port     int    `json:"port"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	SNI      string `json:"sni"`
-	Protocol string `json:"protocol"`
+	Name          string `json:"name"`
+	Server        string `json:"server"`
+	Port          int    `json:"port"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+	SNI           string `json:"sni"`
+	Protocol      string `json:"protocol"`
+	AllowInsecure bool   `json:"allowInsecure"`
 }
 
 func NewHTTP(link string) (*dialer.Dialer, error) {
@@ -68,6 +70,8 @@ func ParseHTTPURL(link string) (data *HTTP, err error) {
 		Password: pwd,
 		SNI:      u.Query().Get("sni"),
 		Protocol: u.Scheme,
+		AllowInsecure: common.StringToBool(u.Query().Get("allowInsecure")) ||
+			common.StringToBool(u.Query().Get("skipVerify")),
 	}, nil
 }
 
@@ -90,17 +94,15 @@ func ParseClash(o *yaml.Node) (data *HTTP, err error) {
 	if option.TLS {
 		scheme = "https"
 	}
-	if option.SkipCertVerify {
-		return nil, fmt.Errorf("%w: skip-cert-verify=true", dialer.UnexpectedFieldErr)
-	}
 	return &HTTP{
-		Name:     option.Name,
-		Server:   option.Server,
-		Port:     option.Port,
-		Username: option.UserName,
-		Password: option.Password,
-		SNI:      option.SNI,
-		Protocol: scheme,
+		Name:          option.Name,
+		Server:        option.Server,
+		Port:          option.Port,
+		Username:      option.UserName,
+		Password:      option.Password,
+		SNI:           option.SNI,
+		AllowInsecure: option.SkipCertVerify,
+		Protocol:      scheme,
 	}, nil
 }
 
@@ -120,7 +122,10 @@ func (s *HTTP) URL() url.URL {
 		Fragment: s.Name,
 	}
 	if s.SNI != "" {
-		u.RawQuery = url.Values{"sni": []string{s.SNI}}.Encode()
+		u.RawQuery = url.Values{
+			"sni":           []string{s.SNI},
+			"allowInsecure": []string{common.BoolToString(s.AllowInsecure)},
+		}.Encode()
 	}
 	if s.Username != "" {
 		if s.Password != "" {

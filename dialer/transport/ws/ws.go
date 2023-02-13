@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/mzz2017/gg/common"
 	"golang.org/x/net/proxy"
 	"net"
 	"net/http"
@@ -47,10 +48,11 @@ func NewWs(s string, d proxy.Dialer) (*Ws, error) {
 		//Subprotocols: []string{"binary"},
 	}
 	if u.Scheme == "wss" {
-		if u.Query().Get("sni") != "" {
-			t.wsDialer.TLSClientConfig = &tls.Config{
-				ServerName: u.Query().Get("sni"),
-			}
+		skipVerify := common.StringToBool(query.Get("allowInsecure")) ||
+			common.StringToBool(query.Get("skipVerify"))
+		t.wsDialer.TLSClientConfig = &tls.Config{
+			ServerName:         u.Query().Get("sni"),
+			InsecureSkipVerify: skipVerify,
 		}
 	}
 	return t, nil

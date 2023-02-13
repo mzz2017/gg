@@ -230,9 +230,6 @@ func ParseClashVMess(o *yaml.Node) (data *V2Ray, err error) {
 		V:             "2",
 		Protocol:      "vmess",
 	}
-	//if option.SkipCertVerify {
-	//	return nil, fmt.Errorf("%w: skip-cert-verify=true", dialer.UnexpectedFieldErr)
-	//}
 	if option.TLS {
 		s.TLS = "tls"
 	}
@@ -334,7 +331,7 @@ func ParseVmessURL(vmess string) (data *V2Ray, err error) {
 			Net:           obfs,
 			Aid:           aid,
 			TLS:           map[string]string{"1": "tls"}[q.Get("tls")],
-			AllowInsecure: false,
+			AllowInsecure: common.StringToBool(q.Get("allowInsecure")),
 		}
 		if info.Net == "websocket" {
 			info.Net = "ws"

@@ -76,8 +76,9 @@ func (s *Trojan) Dialer() (*dialer.Dialer, error) {
 			Scheme: "ws",
 			Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 			RawQuery: url.Values{
-				"host": []string{s.Host},
-				"path": []string{s.Path},
+				"host":          []string{s.Host},
+				"path":          []string{s.Path},
+				"allowInsecure": []string{common.BoolToString(s.AllowInsecure)},
 			}.Encode(),
 		}
 		if d, err = ws.NewWs(u.String(), d); err != nil {
@@ -141,7 +142,7 @@ func ParseTrojanURL(u string) (data *Trojan, err error) {
 		Port:          port,
 		Password:      t.User.Username(),
 		Sni:           sni,
-		AllowInsecure: allowInsecure == "1" || allowInsecure == "true",
+		AllowInsecure: common.StringToBool(allowInsecure),
 		Protocol:      "trojan",
 	}
 	if t.Query().Get("type") != "" {
@@ -157,7 +158,7 @@ func ParseTrojanURL(u string) (data *Trojan, err error) {
 		if data.Type == "grpc" && data.ServiceName == "" {
 			data.ServiceName = data.Path
 		}
-		data.AllowInsecure = false
+		data.AllowInsecure = common.StringToBool(allowInsecure)
 	}
 	return data, nil
 }
