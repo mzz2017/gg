@@ -28,31 +28,34 @@ type DialerWithLatency struct {
 
 func GetDialer(log *logrus.Logger) (d *dialer.Dialer, err error) {
 	nodeLink := config.ParamsObj.Node
+	opt := &dialer.GlobalOption{
+		AllowInsecure: config.ParamsObj.AllowInsecure,
+	}
 	if len(nodeLink) > 0 {
-		d, err = GetDialerFromLink(nodeLink, config.ParamsObj.TestNode, config.ParamsObj.TestURL)
+		d, err = GetDialerFromLink(nodeLink, opt, config.ParamsObj.TestNode, config.ParamsObj.TestURL)
 		if err != nil {
 			return nil, err
 		}
 		return d, nil
 	}
 	if config.ParamsObj.Subscription.Link != "" {
-		if d, err = GetDialerFromSubscription(log, config.ParamsObj.TestNode, config.ParamsObj.TestURL); err != nil {
+		if d, err = GetDialerFromSubscription(log, opt, config.ParamsObj.TestNode, config.ParamsObj.TestURL); err != nil {
 			return nil, err
 		}
 		return d, nil
 	}
-	if d, err = GetDialerFromInput(config.ParamsObj.TestNode, config.ParamsObj.TestURL); err != nil {
+	if d, err = GetDialerFromInput(opt, config.ParamsObj.TestNode, config.ParamsObj.TestURL); err != nil {
 		return nil, err
 	}
 	return d, nil
 }
 
-func GetDialerFromLink(nodeLink string, testNode bool, testURL string) (d *dialer.Dialer, err error) {
+func GetDialerFromLink(nodeLink string, opt *dialer.GlobalOption, testNode bool, testURL string) (d *dialer.Dialer, err error) {
 	u, err := url.Parse(nodeLink)
 	if err != nil {
 		return nil, err
 	}
-	d, err = dialer.NewFromLink(u.Scheme, u.String())
+	d, err = dialer.NewFromLink(u.Scheme, u.String(), opt)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +67,7 @@ func GetDialerFromLink(nodeLink string, testNode bool, testURL string) (d *diale
 	return d, nil
 }
 
-func GetDialerFromInput(testNode bool, testURL string) (d *dialer.Dialer, err error) {
+func GetDialerFromInput(opt *dialer.GlobalOption, testNode bool, testURL string) (d *dialer.Dialer, err error) {
 	var link string
 	// FIXME: Is it really necessary to introduce another one library?
 	err = survey.AskOne(&survey.Input{
@@ -73,10 +76,10 @@ func GetDialerFromInput(testNode bool, testURL string) (d *dialer.Dialer, err er
 	if err != nil {
 		return nil, err
 	}
-	return GetDialerFromLink(strings.TrimSpace(link), testNode, testURL)
+	return GetDialerFromLink(strings.TrimSpace(link), opt, testNode, testURL)
 }
 
-func GetDialerFromSubscription(log *logrus.Logger, testNode bool, testURL string) (d *dialer.Dialer, err error) {
+func GetDialerFromSubscription(log *logrus.Logger, opt *dialer.GlobalOption, testNode bool, testURL string) (d *dialer.Dialer, err error) {
 	if config.ParamsObj.Subscription.Link == "" {
 		return nil, fmt.Errorf("subscription link is not set")
 	}
@@ -84,7 +87,7 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool, testURL string
 	case "manual", "select", "__select__":
 		if config.ParamsObj.Subscription.CacheLastNode {
 			if config.ParamsObj.Subscription.Select != "__select__" {
-				d = GetDialerFromSubscriptionLastNodeCache(testNode, testURL)
+				d = GetDialerFromSubscriptionLastNodeCache(opt, testNode, testURL)
 				if d != nil {
 					log.Infof("Use the cached node: %v\n", d.Name())
 					return d, nil
@@ -97,7 +100,7 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool, testURL string
 			}()
 		}
 		log.Infoln("Pulling the subscription...")
-		dialers, err := pullDialersFromSubscription(log, config.ParamsObj.Subscription.Link)
+		dialers, err := pullDialersFromSubscription(log, opt, config.ParamsObj.Subscription.Link)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +130,7 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool, testURL string
 		fallthrough
 	case "first":
 		if config.ParamsObj.Subscription.CacheLastNode {
-			d = GetDialerFromSubscriptionLastNodeCache(testNode, testURL)
+			d = GetDialerFromSubscriptionLastNodeCache(opt, testNode, testURL)
 			if d != nil {
 				log.Infof("Use the cached node: %v\n", d.Name())
 				return d, nil
@@ -139,7 +142,7 @@ func GetDialerFromSubscription(log *logrus.Logger, testNode bool, testURL string
 			}()
 		}
 		log.Infoln("Pulling the subscription...")
-		dialers, err := pullDialersFromSubscription(log, config.ParamsObj.Subscription.Link)
+		dialers, err := pullDialersFromSubscription(log, opt, config.ParamsObj.Subscription.Link)
 		if err != nil {
 			return nil, err
 		}
@@ -243,9 +246,9 @@ func testLatencies(log *logrus.Logger, dialers []*dialer.Dialer, testURL string)
 	return result
 }
 
-func GetDialerFromSubscriptionLastNodeCache(testNode bool, testURL string) (d *dialer.Dialer) {
+func GetDialerFromSubscriptionLastNodeCache(opt *dialer.GlobalOption, testNode bool, testURL string) (d *dialer.Dialer) {
 	if config.ParamsObj.Cache.Subscription.LastNode != "" {
-		d, _ := GetDialerFromLink(config.ParamsObj.Cache.Subscription.LastNode, testNode, testURL)
+		d, _ := GetDialerFromLink(config.ParamsObj.Cache.Subscription.LastNode, opt, testNode, testURL)
 		if d != nil {
 			return d
 		}

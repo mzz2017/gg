@@ -36,18 +36,24 @@ type Trojan struct {
 	Protocol      string `json:"protocol"`
 }
 
-func NewTrojan(link string) (*dialer.Dialer, error) {
+func NewTrojan(link string, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseTrojanURL(link)
 	if err != nil {
 		return nil, err
 	}
+	if opt.AllowInsecure {
+		s.AllowInsecure = true
+	}
 	return s.Dialer()
 }
 
-func NewTrojanFromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
+func NewTrojanFromClashObj(o *yaml.Node, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseClash(o)
 	if err != nil {
 		return nil, err
+	}
+	if opt.AllowInsecure {
+		s.AllowInsecure = true
 	}
 	return s.Dialer()
 }

@@ -43,7 +43,7 @@ type V2Ray struct {
 	Protocol      string `json:"protocol"`
 }
 
-func NewV2Ray(link string) (*dialer.Dialer, error) {
+func NewV2Ray(link string, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	var (
 		s   *V2Ray
 		err error
@@ -65,13 +65,19 @@ func NewV2Ray(link string) (*dialer.Dialer, error) {
 	default:
 		return nil, dialer.InvalidParameterErr
 	}
+	if opt.AllowInsecure {
+		s.AllowInsecure = true
+	}
 	return s.Dialer()
 }
 
-func NewVMessFromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
+func NewVMessFromClashObj(o *yaml.Node, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseClashVMess(o)
 	if err != nil {
 		return nil, err
+	}
+	if opt.AllowInsecure {
+		s.AllowInsecure = true
 	}
 	return s.Dialer()
 }

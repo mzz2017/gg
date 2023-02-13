@@ -37,7 +37,7 @@ type SIP008Server struct {
 	PluginOpts string `json:"plugin_opts"`
 }
 
-func resolveSubscriptionAsClash(log *logrus.Logger, b []byte) (dialers []*dialer.Dialer, err error) {
+func resolveSubscriptionAsClash(log *logrus.Logger, opt *dialer.GlobalOption, b []byte) (dialers []*dialer.Dialer, err error) {
 	log.Traceln("try to resolve as Clash")
 
 	// base64 decode
@@ -51,7 +51,7 @@ func resolveSubscriptionAsClash(log *logrus.Logger, b []byte) (dialers []*dialer
 		return nil, err
 	}
 	for i, node := range conf.Proxy {
-		d, e := dialer.NewFromClash(&node)
+		d, e := dialer.NewFromClash(&node, opt)
 		if e != nil {
 			log.Tracef("proxies[%v]: %v\n", i, e)
 			continue
@@ -61,7 +61,7 @@ func resolveSubscriptionAsClash(log *logrus.Logger, b []byte) (dialers []*dialer
 	return dialers, nil
 }
 
-func resolveSubscriptionAsBase64(log *logrus.Logger, b []byte) (dialers []*dialer.Dialer) {
+func resolveSubscriptionAsBase64(log *logrus.Logger, opt *dialer.GlobalOption, b []byte) (dialers []*dialer.Dialer) {
 	log.Traceln("try to resolve as base64")
 
 	// base64 decode
@@ -75,7 +75,7 @@ func resolveSubscriptionAsBase64(log *logrus.Logger, b []byte) (dialers []*diale
 		if len(line) == 0 {
 			continue
 		}
-		d, e := GetDialerFromLink(line, false, "")
+		d, e := GetDialerFromLink(line, opt, false, "")
 		if e != nil {
 			log.Tracef("%v: %v\n", e, line)
 			continue
@@ -85,7 +85,7 @@ func resolveSubscriptionAsBase64(log *logrus.Logger, b []byte) (dialers []*diale
 	return dialers
 }
 
-func resolveSubscriptionAsSIP008(log *logrus.Logger, b []byte) (dialers []*dialer.Dialer, err error) {
+func resolveSubscriptionAsSIP008(log *logrus.Logger, opt *dialer.GlobalOption, b []byte) (dialers []*dialer.Dialer, err error) {
 	log.Traceln("try to resolve as SIP008")
 
 	var sip SIP008
@@ -104,7 +104,7 @@ func resolveSubscriptionAsSIP008(log *logrus.Logger, b []byte) (dialers []*diale
 			RawQuery: url.Values{"plugin": []string{server.PluginOpts}}.Encode(),
 			Fragment: server.Remarks,
 		}
-		d, e := dialer.NewFromLink("shadowsocks", u.String())
+		d, e := dialer.NewFromLink("shadowsocks", u.String(), opt)
 		if e != nil {
 			log.Tracef("servers[%v]: %v\n", i, e)
 			continue
@@ -114,7 +114,7 @@ func resolveSubscriptionAsSIP008(log *logrus.Logger, b []byte) (dialers []*diale
 	return
 }
 
-func pullDialersFromSubscription(log *logrus.Logger, subscription string) (dialers []*dialer.Dialer, err error) {
+func pullDialersFromSubscription(log *logrus.Logger, opt *dialer.GlobalOption, subscription string) (dialers []*dialer.Dialer, err error) {
 	resp, err := http.Get(subscription)
 	if err != nil {
 		return nil, err
@@ -124,15 +124,15 @@ func pullDialersFromSubscription(log *logrus.Logger, subscription string) (diale
 	if err != nil {
 		return nil, err
 	}
-	if dialers, err = resolveSubscriptionAsSIP008(log, b); err == nil {
+	if dialers, err = resolveSubscriptionAsSIP008(log, opt, b); err == nil {
 		return dialers, nil
 	} else {
 		log.Traceln(err)
 	}
-	if dialers, err = resolveSubscriptionAsClash(log, b); err == nil {
+	if dialers, err = resolveSubscriptionAsClash(log, opt, b); err == nil {
 		return dialers, nil
 	} else {
 		log.Traceln(err)
 	}
-	return resolveSubscriptionAsBase64(log, b), nil
+	return resolveSubscriptionAsBase64(log, opt, b), nil
 }

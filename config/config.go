@@ -17,7 +17,8 @@ type Params struct {
 
 	Cache Cache `mapstructure:"cache"`
 
-	NoUDP bool `mapstructure:"no_udp"`
+	NoUDP         bool `mapstructure:"no_udp"`
+	AllowInsecure bool `mapstructure:"allow_insecure"`
 
 	TestNode bool   `mapstructure:"test_node_before_use" default:"true"`
 	TestURL  string `mapstructure:"test_url" default:"https://connectivitycheck.gstatic.com/generate_204"`

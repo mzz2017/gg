@@ -32,7 +32,7 @@ type ShadowsocksR struct {
 	Protocol   string `json:"protocol"`
 }
 
-func NewShadowsocksR(link string) (*dialer.Dialer, error) {
+func NewShadowsocksR(link string, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseSSRURL(link)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func NewShadowsocksR(link string) (*dialer.Dialer, error) {
 	return s.Dialer()
 }
 
-func NewShadowsocksRFromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
+func NewShadowsocksRFromClashObj(o *yaml.Node, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseClash(o)
 	if err != nil {
 		return nil, err

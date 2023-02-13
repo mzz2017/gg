@@ -29,7 +29,7 @@ type Socks struct {
 	Protocol string `json:"protocol"`
 }
 
-func NewSocks(link string) (*dialer.Dialer, error) {
+func NewSocks(link string, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseSocksURL(link)
 	if err != nil {
 		return nil, dialer.InvalidParameterErr
@@ -37,7 +37,7 @@ func NewSocks(link string) (*dialer.Dialer, error) {
 	return s.Dialer()
 }
 
-func NewSocks5FromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
+func NewSocks5FromClashObj(o *yaml.Node, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseClashSocks5(o)
 	if err != nil {
 		return nil, err

@@ -28,18 +28,24 @@ type HTTP struct {
 	AllowInsecure bool   `json:"allowInsecure"`
 }
 
-func NewHTTP(link string) (*dialer.Dialer, error) {
+func NewHTTP(link string, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseHTTPURL(link)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", dialer.InvalidParameterErr, err)
 	}
+	if opt.AllowInsecure {
+		s.AllowInsecure = true
+	}
 	return s.Dialer()
 }
 
-func NewSocks5FromClashObj(o *yaml.Node) (*dialer.Dialer, error) {
+func NewSocks5FromClashObj(o *yaml.Node, opt *dialer.GlobalOption) (*dialer.Dialer, error) {
 	s, err := ParseClash(o)
 	if err != nil {
 		return nil, err
+	}
+	if opt.AllowInsecure {
+		s.AllowInsecure = true
 	}
 	return s.Dialer()
 }

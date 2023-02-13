@@ -81,7 +81,7 @@ func (d *Dialer) Test(ctx context.Context, url string) (bool, error) {
 	return resp.StatusCode >= 200 && resp.StatusCode < 400, nil
 }
 
-type FromLinkCreator func(link string) (dialer *Dialer, err error)
+type FromLinkCreator func(link string, opt *GlobalOption) (dialer *Dialer, err error)
 
 var fromLinkCreators = make(map[string]FromLinkCreator)
 
@@ -89,15 +89,15 @@ func FromLinkRegister(name string, creator FromLinkCreator) {
 	fromLinkCreators[name] = creator
 }
 
-func NewFromLink(name string, link string) (dialer *Dialer, err error) {
+func NewFromLink(name string, link string, opt *GlobalOption) (dialer *Dialer, err error) {
 	if creator, ok := fromLinkCreators[name]; ok {
-		return creator(link)
+		return creator(link, opt)
 	} else {
 		return nil, fmt.Errorf("unexpected link type: %v", name)
 	}
 }
 
-type FromClashCreator func(clashObj *yaml.Node) (dialer *Dialer, err error)
+type FromClashCreator func(clashObj *yaml.Node, opt *GlobalOption) (dialer *Dialer, err error)
 
 var fromClashCreators = make(map[string]FromClashCreator)
 
@@ -105,14 +105,14 @@ func FromClashRegister(name string, creator FromClashCreator) {
 	fromClashCreators[name] = creator
 }
 
-func NewFromClash(clashObj *yaml.Node) (dialer *Dialer, err error) {
+func NewFromClash(clashObj *yaml.Node, opt *GlobalOption) (dialer *Dialer, err error) {
 	preUnload := make(map[string]interface{})
 	if err := clashObj.Decode(&preUnload); err != nil {
 		return nil, err
 	}
 	name, _ := preUnload["type"].(string)
 	if creator, ok := fromClashCreators[name]; ok {
-		return creator(clashObj)
+		return creator(clashObj, opt)
 	} else {
 		return nil, fmt.Errorf("unexpected link type: %v", name)
 	}
@@ -143,4 +143,8 @@ func (d *ContextDialer) DialContext(ctx context.Context, network, addr string) (
 	case <-done:
 		return c, err
 	}
+}
+
+type GlobalOption struct {
+	AllowInsecure bool
 }
