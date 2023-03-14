@@ -331,8 +331,8 @@ complete -c gg -x -a "(__fish_complete_gg_subcommand)"
 - [x] Shadowsocks
   - [x] AEAD Ciphers
   - [x] simple-obfs (not tested)
+  - [x] Stream Ciphers
   - [ ] v2ray-plugin
-  - [ ] Stream Ciphers
 - [x] ShadowsocksR
 - [x] Trojan
   - [x] Trojan-gfw
