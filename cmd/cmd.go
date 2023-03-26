@@ -63,7 +63,7 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 				case infra.ErrBadPtraceScope:
 					log.Fatalln("Your kernel does not allow ptrace permission, please use following command and reboot:\necho kernel.yama.ptrace_scope = 1 | sudo tee -a /etc/sysctl.d/10-ptrace.conf")
 				default:
-					log.Warn(err)
+					log.Infoln(err)
 				}
 			}
 
