@@ -88,10 +88,7 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 				return
 			}
 
-			noUDP, err := cmd.Flags().GetBool("noudp")
-			if err != nil {
-				logrus.Fatal("GetBool(noudp):", err)
-			}
+			noUDP := config.ParamsObj.NoUDP
 			if !noUDP && !dialer.SupportUDP() {
 				log.Info("Your proxy server does not support UDP, so we will not redirect UDP traffic.")
 			}
