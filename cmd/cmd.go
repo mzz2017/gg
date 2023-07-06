@@ -4,17 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/mzz2017/gg/cmd/infra"
-	"github.com/mzz2017/gg/tracer"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
 	"syscall"
+
+	"github.com/mzz2017/gg/cmd/infra"
+	"github.com/mzz2017/gg/tracer"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -88,12 +89,15 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 				return
 			}
 
-			noUDP, err := cmd.Flags().GetBool("noudp")
-			if err != nil {
-				logrus.Fatal("GetBool(noudp):", err)
-			}
-			if !noUDP && v.GetBool("no_udp") {
-				noUDP = true
+			// Get no_udp from argument first, then from configuration file.
+			var noUDP bool
+			noUDPFlag := cmd.Flags().Lookup("noudp")
+			if noUDPFlag != nil && noUDPFlag.Changed {
+				if noUDP, err = cmd.Flags().GetBool("noudp"); err != nil {
+					logrus.Fatal("GetBool(noudp):", err)
+				}
+			} else {
+				noUDP = v.GetBool("no_udp")
 			}
 			if !noUDP && !dialer.SupportUDP() {
 				log.Info("Your proxy server does not support UDP, so we will not redirect UDP traffic.")
