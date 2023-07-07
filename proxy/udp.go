@@ -84,6 +84,7 @@ func (p *Proxy) handleUDP(lAddr net.Addr, data []byte) (err error) {
 				return fmt.Errorf("forwardDNSMessage: %w", err)
 			}
 			_, err = p.udpConn.WriteTo(respData, lAddr)
+			return err
 		}
 		// continue to forward DNS request but use replaced DNS server.
 		tgt = "1.1.1.1:53"
