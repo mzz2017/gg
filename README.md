@@ -179,7 +179,7 @@ Write a config variable with `-w`:
 Set subscription:
 
 ```bash
-gg config -w subscription=https://example.com/path/to/sub
+gg config -w subscription=‘https://example.com/path/to/sub’
 gg curl ipv4.appspot.com
 ```
 
