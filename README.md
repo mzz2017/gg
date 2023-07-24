@@ -63,7 +63,7 @@ Compared to proxychains or graftcp, we have the following advantages:
 Configure the subscription:
 
 ```bash
-gg config -w subscription=https://example.com/path/to/sub
+gg config -w subscription=‘https://example.com/path/to/sub’
 ```
 
 Test with cloning linux repo:
