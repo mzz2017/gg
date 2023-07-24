@@ -56,7 +56,7 @@ gg 是一个命令行工具，可在 Linux 环境下对任意命令进行一键�
 配置你的订阅地址:
 
 ```bash
-gg config -w subscription=https://example.com/path/to/sub
+gg config -w subscription='https://example.com/path/to/sub'
 ```
 
 克隆 linux 仓库来试试效果：
