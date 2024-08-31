@@ -18,6 +18,7 @@ type Params struct {
 	Cache Cache `mapstructure:"cache"`
 
 	NoUDP         bool `mapstructure:"no_udp"`
+	ProxyPrivate  bool `mapstructure:"proxy_private"`
 	AllowInsecure bool `mapstructure:"allow_insecure"`
 
 	TestNode bool   `mapstructure:"test_node_before_use" default:"true"`

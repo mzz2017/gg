@@ -3,17 +3,18 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/config"
 	"github.com/pelletier/go-toml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"os"
-	"path/filepath"
-	"sort"
-	"strings"
 )
 
 var (
@@ -183,6 +184,7 @@ func getConfig(log *logrus.Logger, bindToConfig bool, newViper func() *viper.Vip
 
 	if flagCmd != nil {
 		v.BindPFlag("no_udp", flagCmd.PersistentFlags().Lookup("noudp"))
+		v.BindPFlag("proxy_private", flagCmd.PersistentFlags().Lookup("proxyprivate"))
 		v.BindPFlag("test_node_before_use", flagCmd.PersistentFlags().Lookup("testnode"))
 		if node, _ := flagCmd.PersistentFlags().GetString("node"); node != "" {
 			//log.Warn("Please use --node only on trusted computers, because it may leave a record in command history.")

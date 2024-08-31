@@ -3,13 +3,14 @@ package tracer
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/mzz2017/gg/proxy"
 	"net"
 	"net/netip"
 	"reflect"
 	"strconv"
 	"syscall"
 	"unsafe"
+
+	"github.com/mzz2017/gg/proxy"
 )
 
 func (t *Tracer) getArgsFromStorehouse(pid, inst int) ([]uint64, error) {
@@ -324,10 +325,10 @@ func (t *Tracer) handleINet4(socketInfo *SocketMetadata, bSockAddr []byte) (sock
 		return nil, nil
 	}
 	isDNS := network == "udp" && targetPort == 53
-	if ip := netip.AddrFrom4(addr.Addr); (network == "tcp" || network == "udp") && ip.IsLoopback() && !isDNS {
-		// skip loopback
+	if ip := netip.AddrFrom4(addr.Addr); (network == "tcp" || network == "udp") && (ip.IsLoopback() || (t.ignorePrivateAddr && ip.IsPrivate())) && !isDNS {
+		// skip loopback/private
 		// but only keep DNS packets sent to the port 53
-		t.log.Tracef("skip loopback: %v", netip.AddrPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
+		t.log.Tracef("skip loopback/private: %v", netip.AddrPortFrom(ip, binary.BigEndian.Uint16(addr.Port[:])).String())
 		return nil, nil
 	}
 	//logrus.Traceln("before", bSockAddr)

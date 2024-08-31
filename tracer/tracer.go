@@ -3,13 +3,14 @@ package tracer
 import (
 	"context"
 	"fmt"
-	"github.com/mzz2017/gg/dialer"
-	"github.com/mzz2017/gg/proxy"
-	"github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"syscall"
 	"time"
+
+	"github.com/mzz2017/gg/dialer"
+	"github.com/mzz2017/gg/proxy"
+	"github.com/sirupsen/logrus"
 )
 
 type SocketMetadata struct {
@@ -20,29 +21,34 @@ type SocketMetadata struct {
 
 // Tracer is not thread-safe.
 type Tracer struct {
-	ctx        context.Context
-	ignoreUDP  bool
-	supportUDP bool
-	log        *logrus.Logger
-	proxy      *proxy.Proxy
-	proc       *os.Process
-	storehouse Storehouse
-	socketInfo map[int]map[int]SocketMetadata
-	closed     chan struct{}
-	exitCode   int
-	exitErr    error
+	ctx               context.Context
+	ignoreUDP         bool
+	ignorePrivateAddr bool
+	supportUDP        bool
+	log               *logrus.Logger
+	proxy             *proxy.Proxy
+	proc              *os.Process
+	storehouse        Storehouse
+	socketInfo        map[int]map[int]SocketMetadata
+	closed            chan struct{}
+	exitCode          int
+	exitErr           error
 }
 
-func New(ctx context.Context, name string, argv []string, attr *os.ProcAttr, dialer *dialer.Dialer, ignoreUDP bool, logger *logrus.Logger) (*Tracer, error) {
+func New(ctx context.Context, name string, argv []string, attr *os.ProcAttr, dialer *dialer.Dialer, ignoreUDP bool, ignorePrivateAddr bool, logger *logrus.Logger) (*Tracer, error) {
 	t := &Tracer{
-		ctx:        ctx,
-		log:        logger,
-		supportUDP: dialer.SupportUDP(),
-		proxy:      proxy.New(logger, dialer),
-		socketInfo: make(map[int]map[int]SocketMetadata),
-		storehouse: MakeStorehouse(),
-		closed:     make(chan struct{}),
-		ignoreUDP:  ignoreUDP,
+		ctx:               ctx,
+		ignoreUDP:         ignoreUDP,
+		ignorePrivateAddr: ignorePrivateAddr,
+		supportUDP:        dialer.SupportUDP(),
+		log:               logger,
+		proxy:             proxy.New(logger, dialer),
+		proc:              &os.Process{},
+		storehouse:        MakeStorehouse(),
+		socketInfo:        make(map[int]map[int]SocketMetadata),
+		closed:            make(chan struct{}),
+		exitCode:          0,
+		exitErr:           nil,
 	}
 	go func() {
 		if err := t.proxy.ListenAndServe(0); err != nil {

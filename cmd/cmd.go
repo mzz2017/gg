@@ -102,6 +102,16 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 			if !noUDP && !dialer.SupportUDP() {
 				log.Info("Your proxy server does not support UDP, so we will not redirect UDP traffic.")
 			}
+			// Get proxy_private from argument first, then from configuration file.
+			var proxyPrivate bool
+			proxyPrivateFlag := cmd.Flags().Lookup("proxyprivate")
+			if proxyPrivateFlag != nil && proxyPrivateFlag.Changed {
+				if proxyPrivate, err = cmd.Flags().GetBool("proxyprivate"); err != nil {
+					logrus.Fatal("GetBool(proxyprivate):", err)
+				}
+			} else {
+				proxyPrivate = v.GetBool("proxy_private")
+			}
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			t, err := tracer.New(
@@ -111,6 +121,7 @@ $ gg git clone https://github.com/mzz2017/gg.git`)
 				&os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}, Env: os.Environ()},
 				dialer,
 				noUDP,
+				!proxyPrivate,
 				log,
 			)
 			if err != nil {
@@ -145,6 +156,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("node", "n", "", "node share-link of your modern proxy")
 	rootCmd.PersistentFlags().StringP("subscription", "s", "", "subscription-link of your modern proxy")
 	rootCmd.PersistentFlags().Bool("noudp", false, "do not redirect UDP traffic, even though the proxy server supports")
+	rootCmd.PersistentFlags().Bool("proxyprivate", false, "redirect traffic to private address")
 	rootCmd.PersistentFlags().String("testnode", "true", "test the connectivity before connecting to the node")
 	rootCmd.PersistentFlags().Bool("select", false, "manually select the node to connect from the subscription")
 	rootCmd.AddCommand(configCmd)
