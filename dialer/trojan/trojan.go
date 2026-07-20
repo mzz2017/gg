@@ -2,12 +2,12 @@ package trojan
 
 import (
 	"fmt"
+	"github.com/daeuniverse/outbound/protocol"
+	"github.com/daeuniverse/outbound/transport/grpc"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/dialer/transport/tls"
 	"github.com/mzz2017/gg/dialer/transport/ws"
-	"github.com/mzz2017/softwind/protocol"
-	"github.com/mzz2017/softwind/transport/grpc"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -95,29 +95,33 @@ func (s *Trojan) Dialer() (*dialer.Dialer, error) {
 		if serviceName == "" {
 			serviceName = "GunService"
 		}
-		d = &grpc.Dialer{
-			NextDialer:    &protocol.DialerConverter{Dialer: d},
+		d = dialer.FromNetproxyDialer(&grpc.Dialer{
+			NextDialer:    dialer.ToNetproxyDialer(d),
 			ServiceName:   serviceName,
 			ServerName:    s.Sni,
 			AllowInsecure: s.AllowInsecure,
-		}
+		})
 	}
 	if strings.HasPrefix(s.Encryption, "ss;") {
 		fields := strings.SplitN(s.Encryption, ";", 3)
-		if d, err = protocol.NewDialer("shadowsocks", d, protocol.Header{
+		outboundDialer, outboundErr := protocol.NewDialer("shadowsocks", dialer.ToNetproxyDialer(d), protocol.Header{
 			ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 			Cipher:       fields[1],
 			Password:     fields[2],
 			IsClient:     false,
-		}); err != nil {
+		})
+		d, err = dialer.FromNetproxyDialer(outboundDialer), outboundErr
+		if err != nil {
 			return nil, err
 		}
 	}
-	if d, err = protocol.NewDialer("trojanc", d, protocol.Header{
+	outboundDialer, outboundErr := protocol.NewDialer("trojanc", dialer.ToNetproxyDialer(d), protocol.Header{
 		ProxyAddress: net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
 		Password:     s.Password,
 		IsClient:     true,
-	}); err != nil {
+	})
+	d, err = dialer.FromNetproxyDialer(outboundDialer), outboundErr
+	if err != nil {
 		return nil, err
 	}
 	return dialer.NewDialer(d, true, s.Name, s.Protocol, s.ExportToURL()), nil

@@ -2,8 +2,8 @@ package proxy
 
 import (
 	"errors"
+	"github.com/daeuniverse/outbound/pool"
 	"github.com/mzz2017/gg/infra/ip_mtu_trie"
-	"github.com/mzz2017/softwind/pool"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/proxy"
 	"net"
