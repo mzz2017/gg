@@ -316,6 +316,8 @@ complete -c gg -x -a "(__fish_complete_gg_subcommand)"
 
 ### Protocol
 
+- [x] Hysteria2 (HY2)
+- [x] AnyTLS
 - [x] HTTP(S)
 - [x] Socks
   - [x] Socks4

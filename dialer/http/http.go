@@ -2,9 +2,9 @@ package http
 
 import (
 	"fmt"
+	"github.com/daeuniverse/outbound/protocol/http"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
-	"github.com/mzz2017/softwind/protocol/http"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -114,10 +114,11 @@ func ParseClash(o *yaml.Node) (data *HTTP, err error) {
 
 func (s *HTTP) Dialer() (*dialer.Dialer, error) {
 	u := s.URL()
-	d, err := http.NewHTTPProxy(&u, dialer.SymmetricDirect)
+	outboundDialer, err := http.NewHTTPProxy(&u, dialer.ToNetproxyDialer(dialer.SymmetricDirect))
 	if err != nil {
 		return nil, err
 	}
+	d := dialer.FromNetproxyDialer(outboundDialer)
 	return dialer.NewDialer(d, false, s.Name, s.Protocol, u.String()), nil
 }
 
