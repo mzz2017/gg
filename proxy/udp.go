@@ -2,10 +2,10 @@ package proxy
 
 import (
 	"fmt"
+	"github.com/daeuniverse/outbound/pool"
+	"github.com/daeuniverse/outbound/protocol/shadowsocks"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/infra/ip_mtu_trie"
-	"github.com/mzz2017/softwind/pool"
-	"github.com/mzz2017/softwind/protocol/shadowsocks"
 	"golang.org/x/net/dns/dnsmessage"
 	"net"
 	"net/netip"

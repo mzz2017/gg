@@ -3,13 +3,13 @@ package v2ray
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/daeuniverse/outbound/protocol"
+	"github.com/daeuniverse/outbound/transport/grpc"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/dialer/transport/tls"
 	"github.com/mzz2017/gg/dialer/transport/ws"
-	"github.com/mzz2017/softwind/protocol"
-	"github.com/mzz2017/softwind/transport/grpc"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -141,22 +141,25 @@ func (s *V2Ray) Dialer() (data *dialer.Dialer, err error) {
 		if serviceName == "" {
 			serviceName = "GunService"
 		}
-		d = &grpc.Dialer{
-			NextDialer:    &protocol.DialerConverter{Dialer: d},
+		d = dialer.FromNetproxyDialer(&grpc.Dialer{
+			NextDialer:    dialer.ToNetproxyDialer(d),
 			ServiceName:   serviceName,
 			ServerName:    sni,
 			AllowInsecure: s.AllowInsecure,
-		}
+		})
 	default:
 		return nil, fmt.Errorf("%w: network: %v", dialer.UnexpectedFieldErr, s.Net)
 	}
 
-	if d, err = protocol.NewDialer(s.Protocol, d, protocol.Header{
+	outboundDialer, outboundErr := protocol.NewDialer(s.Protocol, dialer.ToNetproxyDialer(d), protocol.Header{
 		ProxyAddress: net.JoinHostPort(s.Add, s.Port),
 		Cipher:       "aes-128-gcm",
 		Password:     s.ID,
 		IsClient:     true,
-	}); err != nil {
+		Feature1:     s.Flow,
+	})
+	d, err = dialer.FromNetproxyDialer(outboundDialer), outboundErr
+	if err != nil {
 		return nil, err
 	}
 	return dialer.NewDialer(d, true, s.Ps, s.Protocol, s.ExportToURL()), nil
