@@ -3,7 +3,7 @@ module github.com/mzz2017/gg
 go 1.18
 
 require (
-	github.com/1lann/promptui v0.0.0-20201231203810-3d80f6bc68f3
+	github.com/1lann/promptui v0.8.1-0.20220708222609-81fad96dd5e1
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/fatih/structs v1.1.0
 	github.com/gorilla/websocket v1.4.2
@@ -35,10 +35,8 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.12 // indirect
-	github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
