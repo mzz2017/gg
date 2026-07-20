@@ -159,7 +159,13 @@ func init() {
 	rootCmd.PersistentFlags().Bool("proxyprivate", false, "redirect traffic to private address")
 	rootCmd.PersistentFlags().String("testnode", "true", "test the connectivity before connecting to the node")
 	rootCmd.PersistentFlags().Bool("select", false, "manually select the node to connect from the subscription")
+	configureCommandPassthrough(rootCmd)
 	rootCmd.AddCommand(configCmd)
+}
+
+func configureCommandPassthrough(command *cobra.Command) {
+	command.Args = cobra.ArbitraryArgs
+	command.Flags().SetInterspersed(false)
 }
 
 func NewLogger(verbose int) *logrus.Logger {

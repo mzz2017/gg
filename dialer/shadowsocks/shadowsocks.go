@@ -3,11 +3,11 @@ package shadowsocks
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/daeuniverse/outbound/protocol"
+	"github.com/daeuniverse/outbound/protocol/shadowsocks"
 	"github.com/mzz2017/gg/common"
 	"github.com/mzz2017/gg/dialer"
 	"github.com/mzz2017/gg/dialer/transport/simpleobfs"
-	"github.com/mzz2017/softwind/protocol"
-	"github.com/mzz2017/softwind/protocol/shadowsocks"
 	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
@@ -84,12 +84,13 @@ func (s *Shadowsocks) Dialer() (*dialer.Dialer, error) {
 	if isSS2022Cipher(s.Cipher) {
 		d, err = newSS2022Dialer(d, proxyAddress, s.Cipher, s.Password)
 	} else {
-		d, err = protocol.NewDialer("shadowsocks", d, protocol.Header{
+		outboundDialer, outboundErr := protocol.NewDialer("shadowsocks", dialer.ToNetproxyDialer(d), protocol.Header{
 			ProxyAddress: proxyAddress,
 			Cipher:       s.Cipher,
 			Password:     s.Password,
 			IsClient:     true,
 		})
+		d, err = dialer.FromNetproxyDialer(outboundDialer), outboundErr
 	}
 	if err != nil {
 		return nil, err
