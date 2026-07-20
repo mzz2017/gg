@@ -3,7 +3,7 @@ package proxy
 import (
 	"errors"
 	"fmt"
-	io2 "github.com/mzz2017/softwind/pkg/zeroalloc/io"
+	io2 "github.com/daeuniverse/outbound/pkg/zeroalloc/io"
 	"net"
 	"net/netip"
 	"time"
@@ -31,7 +31,6 @@ func (p *Proxy) handleTCP(conn net.Conn) error {
 	}
 	return nil
 }
-
 
 type WriteCloser interface {
 	CloseWrite() error

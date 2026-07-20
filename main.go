@@ -7,16 +7,16 @@ import (
 	"os"
 	"time"
 
+	_ "github.com/daeuniverse/outbound/protocol/shadowsocks"
+	_ "github.com/daeuniverse/outbound/protocol/trojanc"
+	_ "github.com/daeuniverse/outbound/protocol/vless"
+	_ "github.com/daeuniverse/outbound/protocol/vmess"
 	_ "github.com/mzz2017/gg/dialer/http"
 	_ "github.com/mzz2017/gg/dialer/shadowsocks"
 	_ "github.com/mzz2017/gg/dialer/shadowsocksr"
 	_ "github.com/mzz2017/gg/dialer/socks"
 	_ "github.com/mzz2017/gg/dialer/trojan"
 	_ "github.com/mzz2017/gg/dialer/v2ray"
-	_ "github.com/mzz2017/softwind/protocol/shadowsocks"
-	_ "github.com/mzz2017/softwind/protocol/trojanc"
-	_ "github.com/mzz2017/softwind/protocol/vless"
-	_ "github.com/mzz2017/softwind/protocol/vmess"
 )
 
 func main() {

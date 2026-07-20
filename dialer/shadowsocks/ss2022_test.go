@@ -44,3 +44,17 @@ func TestSS2022DialerRejectsBadKeyLength(t *testing.T) {
 		t.Fatal("expected bad key length error")
 	}
 }
+
+func TestLegacyShadowsocksDialerUsesOutbound(t *testing.T) {
+	s := &Shadowsocks{
+		Cipher:   "aes-128-gcm",
+		Password: "password",
+		Server:   "192.0.2.1",
+		Port:     8388,
+		UDP:      true,
+		Protocol: "shadowsocks",
+	}
+	if _, err := s.Dialer(); err != nil {
+		t.Fatal(err)
+	}
+}
