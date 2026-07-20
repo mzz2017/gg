@@ -308,6 +308,7 @@ complete -c gg -x -a "(__fish_complete_gg_subcommand)"
 
 ### 协议类型
 
+- [x] Hysteria2 (HY2)
 - [x] HTTP(S)
 - [x] Socks5
 - [x] VMess(AEAD, alterID=0) / VLESS

@@ -3,14 +3,16 @@ package shadowsocksr
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/mzz2017/gg/common"
-	"github.com/mzz2017/gg/dialer"
-	ssr "github.com/v2rayA/shadowsocksR/client"
-	"gopkg.in/yaml.v3"
 	"net"
 	"net/url"
 	"strconv"
 	"strings"
+
+	outboundSSR "github.com/daeuniverse/outbound/dialer/shadowsocksr"
+	"github.com/daeuniverse/outbound/netproxy"
+	"github.com/mzz2017/gg/common"
+	"github.com/mzz2017/gg/dialer"
+	"gopkg.in/yaml.v3"
 )
 
 func init() {
@@ -49,22 +51,26 @@ func NewShadowsocksRFromClashObj(o *yaml.Node, opt *dialer.GlobalOption) (*diale
 }
 
 func (s *ShadowsocksR) Dialer() (*dialer.Dialer, error) {
-	u := url.URL{
-		Scheme: "ssr",
-		User:   url.UserPassword(s.Cipher, s.Password),
-		Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
-		RawQuery: url.Values{
-			"protocol":       []string{s.Proto},
-			"protocol_param": []string{s.ProtoParam},
-			"obfs":           []string{s.Obfs},
-			"obfs_param":     []string{s.ObfsParam},
-		}.Encode(),
-	}
-	d, err := ssr.NewSSR(u.String(), dialer.SymmetricDirect, nil)
+	return s.dialer(dialer.ToNetproxyDialer(dialer.SymmetricDirect))
+}
+
+func (s *ShadowsocksR) dialer(next netproxy.Dialer) (*dialer.Dialer, error) {
+	d, _, err := (&outboundSSR.ShadowsocksR{
+		Name:       s.Name,
+		Server:     s.Server,
+		Port:       s.Port,
+		Password:   s.Password,
+		Cipher:     s.Cipher,
+		Proto:      s.Proto,
+		ProtoParam: s.ProtoParam,
+		Obfs:       s.Obfs,
+		ObfsParam:  s.ObfsParam,
+		Protocol:   s.Protocol,
+	}).Dialer(nil, next)
 	if err != nil {
 		return nil, err
 	}
-	return dialer.NewDialer(d, false, s.Name, s.Protocol, s.ExportToURL()), nil
+	return dialer.NewDialer(dialer.FromNetproxyDialer(d), false, s.Name, s.Protocol, s.ExportToURL()), nil
 }
 
 func ParseClash(o *yaml.Node) (data *ShadowsocksR, err error) {
