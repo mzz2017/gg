@@ -81,9 +81,9 @@ func (s *Trojan) Dialer() (*dialer.Dialer, error) {
 		u = url.URL{
 			Scheme: "ws",
 			Host:   net.JoinHostPort(s.Server, strconv.Itoa(s.Port)),
+			Path:   s.Path,
 			RawQuery: url.Values{
 				"host":          []string{s.Host},
-				"path":          []string{s.Path},
 				"allowInsecure": []string{common.BoolToString(s.AllowInsecure)},
 			}.Encode(),
 		}
